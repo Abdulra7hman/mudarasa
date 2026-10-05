@@ -15,9 +15,9 @@ Small samples. They show direction, not statistical proof.
 | vessels | 1 | 13 | 13 (100%) | 10 (77%) |
 
 ## Word meaning
-- Ibn Qasim glosses as gold: top-1 correct for 20/20 words. This is partly circular, because the glossary is built from these notes; it tests lookup, stemming and ranking.
-- 20 random words from the Rawd: a cited definition found for 5/20. Otherwise the app offers a checked «اشرح من النصوص» question.
-- Glossary size: 245 entries.
+- Ibn Qasim glosses as gold: top-1 correct for 18/20 words. This is partly circular, because the glossary is built from these notes; it tests lookup, stemming and ranking.
+- 20 random words from the Rawd: a cited definition found for 7/20. Otherwise the app offers a checked «اشرح من النصوص» question.
+- Glossary size: 332 entries.
 
 ## Takhrij
 | Chapter | Takhrij notes | With a stated grading | Manuscript-variant notes |

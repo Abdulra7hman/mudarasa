@@ -61,30 +61,64 @@ def takhrij_for(p):
 
 
 # ---------- word meaning ----------
-GLOSS_RE = re.compile(r"([ء-يً-ْ]{3,})\s*[:،]?\s*(?:\)\s*)?(أي|أَي|أَيْ)\s*[:،]?\s*([^.؛:(\n]{3,90})")
-LUGHA_RE = re.compile(r"([ء-يً-ْ]{3,})\s*\)?\s*(?:لغة|لُغَةً|لغةً)\s*[:،]?\s*([^.؛(\n]{3,100})")
+AR = "\u0621-\u064A\u064B-\u0652"
+GLOSS_RE = re.compile(rf"([{AR}]{{3,}})\s*[:،]?\s*(?:\)\s*)?(أي|أَي|أَيْ)\s*[:،]?\s*([^.؛:(\n]{{3,90}})")
+DEF_RES = [  # (pattern, label): group 1 = the word before, last group = the definition
+    (re.compile(rf"([{AR}]{{2,}})\s*\)?\s*[:،]?\s*(?:في اللغة|لغة|لغةً|لُغَةً)\s*[:،]?\s*([^.؛(\n]{{3,120}})"), "لغةً: ", "lugha"),
+    (re.compile(rf"([{AR}]{{2,}})\s*\)?\s*[:،]?\s*(?:في الاصطلاح|اصطلاحا|اصطلاحًا|في الشرع|شرعا|شرعًا)\s*[:،]?\s*([^.؛(\n]{{3,140}})"), "اصطلاحًا: ", "istilah"),
+    (re.compile(rf"([{AR}]{{3,}})\s*:\s*(?:هو|هي)\s+([^.؛(\n]{{3,120}})"), "", "def"),
+]
+# «ومعناه لغة: …» defines the term being explained, not the word «معناه»
+PRONOUNS = {normalise(w) for w in "معناه معناها ومعناه ومعناها وهو وهي هو هي وهذا هذا وذلك ذلك وهما هما وهم وحقيقته وحقيقتها".split()}
+STOP = {normalise(w) for w in """و ما وما في من على الى إلى عن أن إن لا لم لن قد ثم أو او بل هو هي هذا هذه ذلك تلك التي الذي الذين كان كانت يكون تكون
+    لأن لأنه لأنها لانه لانها إذا اذا إذ حتى كل بعض غير مع عند بين فيه فيها منه منها عليه عليها به بها له لها كما مما ممن وهو وهي
+    ولا ولم وقد فإن فان وإن وان ولو لو أي يعني نحو مثل كذا وكذا أيضا ايضا إلا الا سواء كذلك فلا فلم وكان""".split()}
+KIND_RANK = {"lugha": 0, "istilah": 1, "def": 2, "gloss_rawd": 3, "note": 4, "gloss": 5}
+
+
+def content_words(text, limit=3):
+    ws = [w for w in normalise(text).split() if len(w) >= 3 and w not in STOP]
+    return ws if 0 < len(ws) <= limit else []
 
 
 def build_glossary(study):
     entries = []
 
-    def add(word, definition, src, p, para, kind):
-        key = stem(normalise(word).split()[-1]) if normalise(word) else ""
-        if len(key) < 2 or len(normalise(definition)) < 3:
-            return
-        entries.append({"key": key, "word": strip_tashkeel(word), "definition": definition.strip(" ،:"), "source": src,
-                        "vol": p["vol"], "page": p["page"], "link": p["link"], "para": para, "kind": kind})
+    def add(word, definition, src, ref, para, kind, context=()):
+        n = normalise(word)
+        words = list(context) if (not n or n in PRONOUNS or n in STOP) else [n.split()[-1]]
+        for w in words:
+            key = stem(w)
+            if len(key) < 2 or len(normalise(definition)) < 3:
+                continue
+            entries.append({"key": key, "word": strip_tashkeel(w), "definition": definition.strip(" ،:"), "source": src,
+                            "vol": ref["vol"], "page": ref["page"], "link": ref["link"], "para": para, "kind": kind})
 
+    def scan(text, src, ref, para, context):
+        for rx, label, kind in DEF_RES:
+            for m in rx.finditer(text):
+                add(m.group(1), label + m.group(m.lastindex), src, ref, para, kind, context)
+        for m in GLOSS_RE.finditer(text):
+            add(m.group(1), "أي " + m.group(3), src, ref, para, "gloss_rawd" if src == "الروض المربع" else "gloss", context)
+
+    for ch in study["chapters"]:  # «باب الآنية: هي الأوعية…»: the chapter's opening sentence defines its title
+        p = study["paras"][ch["paras"][0]] if ch["paras"] else None
+        m = p and re.match(r"\s*(?:هي|هو)\s+([^.؛(\n]{3,120})", p["text"])
+        if m:
+            add(ch["title"].split()[-1], m.group(1), "الروض المربع", p, p["id"], "def")
+
+    for u in study["units"].values():  # the Rawd, unit by unit: the matn term is the context of its sharh
+        p = study["paras"][u["para"]]
+        scan(u["text"], "الروض المربع", p, u["para"], content_words(u["matn"]))
     for pid, p in study["paras"].items():
         for n in p["iq"]:  # Ibn Qasim's note sits right after the word it explains
             if n["lemma"] and n["method"] != "title" and re.match(r"\s*(أي|يعني|بفتح|بضم|بكسر|بتثليث|جمع|مصدر|اسم)", n["text"]):
                 add(n["lemma"].split()[-1], n["text"][:300], "حاشية ابن قاسم", n, pid, "note")
-        texts = [(p["text"], "الروض المربع", p)] + [(l["text"], "الشرح الممتع", l) for s in p["mumti"] for l in s["lines"]]
-        for t, src, ref in texts:
-            for m in GLOSS_RE.finditer(t):
-                add(m.group(1), "أي " + m.group(3), src, ref, pid, "gloss")
-            for m in LUGHA_RE.finditer(t):
-                add(m.group(1), "لغةً: " + m.group(2), src, ref, pid, "lugha")
+            scan(n["text"], "حاشية ابن قاسم", n, pid, content_words(n["lemma"].split()[-1] if n["lemma"] else ""))
+        for s in p["mumti"]:
+            heading = re.sub(r"[«»\"]|^قوله\s*:?", " ", s["heading"])
+            for ln in s["lines"]:
+                scan(ln["text"], "الشرح الممتع", ln, pid, content_words(heading))
     return entries
 
 
@@ -95,12 +129,12 @@ class Glossary:
 
     def lookup(self, word, para=None, k=4):
         n = normalise(word)
-        if not n:
+        if not n or n in STOP:
             return []
         key = stem(n.split()[-1])
         hits = [e for e in self.entries if e["key"] == key or e["key"] == n]
         ch = self.chapter.get(para)
-        hits.sort(key=lambda e: (e["para"] != para, self.chapter.get(e["para"]) != ch, e["kind"] != "note"))
+        hits.sort(key=lambda e: (KIND_RANK.get(e["kind"], 9), e["para"] != para, self.chapter.get(e["para"]) != ch))
         seen, out = set(), []
         for e in hits:
             sig = normalise(e["definition"])[:60]
@@ -160,7 +194,7 @@ def register(app, study):
     def word(w: str, para: str = None):
         if not gl:
             raise HTTPException(404, "not found")
-        return {"word": w, "items": gl.lookup(w[:40], para)}
+        return {"word": w, "stop": normalise(w) in STOP, "items": gl.lookup(w[:40], para)}
 
     @app.get("/api/matn/{cid}")
     def matn(cid: str):

@@ -7,6 +7,7 @@
     const STRIP = s => String(s || "").replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, "");
     const NORM = s => STRIP(s).replace(/[إأآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/[^ء-ي0-9 ]/g, " ").replace(/\s+/g, " ").trim();
     const STEM = w => { for (const p of ["وال", "فال", "بال", "كال", "لل", "ال", "و", "ف", "ب", "ل", "ك"]) if (w.startsWith(p) && w.length - p.length >= 2) { w = w.slice(p.length); break; } return w; };
+    const STOPW = new Set(`و ما وما في من على الى إلى عن أن إن لا لم لن قد ثم أو او بل هو هي هذا هذه ذلك تلك التي الذي الذين كان كانت يكون تكون لأن لأنه لأنها إذا اذا إذ حتى كل بعض غير مع عند بين فيه فيها منه منها عليه عليها به بها له لها كما مما ممن وهو وهي ولا ولم وقد فإن وإن ولو لو أي يعني نحو مثل وكذا أيضا إلا سواء كذلك فلا فلم وكان`.split(/\s+/).map(w => NORM(w)));
     const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const download = (name, text, type = "text/markdown") => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type: type + ";charset=utf-8"})); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
     const chapterButtons = (cur, base) => `<div class="chapters">${MD.state.cfg.chapters.map(c => `<button class="${c.id === cur ? "on" : ""}" onclick="location.hash='#/${base}/${c.id}'">${esc(c.title)}</button>`).join("")}</div>`;
@@ -130,7 +131,7 @@
       }
       if (F.word) {
         const tx = el.querySelector("[data-text]");
-        tx.innerHTML = tx.innerHTML.replace(/(^|[\s>(«])([ء-يً-ْٰ]{3,})(?=[\s<)»،.؛:]|$)/g, (m, a, w) => `${a}<span class="word" tabindex="0">${w}</span>`);
+        tx.innerHTML = tx.innerHTML.replace(/(^|[\s>(«])([ء-يً-ْٰ]{3,})(?=[\s<)»،.؛:]|$)/g, (m, a, w) => STOPW.has(NORM(w)) ? m : `${a}<span class="word" tabindex="0">${w}</span>`);
         tx.title = "اضغط على كلمة لمعرفة معناها";
         tx.querySelectorAll(".word").forEach(w => w.onclick = e => { e.stopPropagation(); wordPop(w.textContent, p); });
         const hint = document.createElement("span"); hint.className = "meta"; hint.textContent = "اضغط على أي كلمة في الفقرة لمعرفة معناها من الكتب.";
@@ -158,7 +159,7 @@
       const items = d.items || [];
       pop.innerHTML = `<div class="row"><b class="book">${esc(word)}</b><span class="spacer"></span><button class="btn small" data-x>إغلاق</button></div>` +
         (items.length ? items.map((e, i) => `<div class="note"><div class="book">${esc(view(e.definition))}</div><div class="meta">${MD.ref({book: e.source, vol: e.vol, page: e.page})} · <a href="${e.link}" target="_blank" rel="noopener">افتح الصفحة</a>${F.notebook ? ` · <button class="btn small" data-nb="${i}">أضف إلى دفتري</button>` : ""}</div></div>`).join("")
-          : `<p class="meta">لم نجد تعريفًا لهذه الكلمة في حواشي الكتب المحمّلة.</p>`) +
+          : `<p class="meta">${d.stop ? "هذه كلمة أداة (حرف أو ضمير)؛ اختر كلمة أخرى." : "لم نجد تعريفًا محفوظًا لهذه الكلمة في الكتب المحمّلة. اطلب شرحها من النصوص (سؤال موثق بالخطوات نفسها)."}</p>`) +
         `<div class="row" style="margin-top:8px"><button class="btn primary" data-ask>اشرح من النصوص</button><span class="meta">سؤال موثق بالخطوات نفسها</span></div>`;
       pop.querySelector("[data-x]").onclick = () => pop.remove();
       pop.querySelectorAll("[data-nb]").forEach(b => b.onclick = () => { const e = items[+b.dataset.nb]; NB.add({type: "معنى كلمة", title: `معنى «${STRIP(word)}»`, body: e.definition, cites: [{book: e.source, vol: e.vol, page: e.page, link: e.link}]}); });
@@ -227,7 +228,11 @@
             u.onend = next; u.onerror = next; speechSynthesis.speak(u);
           }
         };
-        v.querySelector("#lp").onclick = () => { if (playing) { playing = false; stopAll(); v.querySelector("#lp").textContent = "▶ تشغيل"; return; } playing = true; v.querySelector("#lp").textContent = "⏸ إيقاف"; mark(idx); queue = items(); next(); };
+        const arVoice = () => speechSynthesis.getVoices().find(x => x.lang && x.lang.toLowerCase().startsWith("ar"));
+        if (!Object.keys(clips).length && !arVoice()) await new Promise(ok => { speechSynthesis.onvoiceschanged = ok; setTimeout(ok, 1500); });
+        const noVoice = !Object.keys(clips).length && !arVoice();
+        if (noVoice) v.querySelector("#lsrc").innerHTML = `<b style="color:var(--bad)">لا يوجد صوت عربي في هذا المتصفح، والتسجيلات الجاهزة لم تُنشأ بعد (تحتاج خدمة Azure Speech).</b>`;
+        v.querySelector("#lp").onclick = () => { if (noVoice && !arVoice()) { MD.toast("لا يوجد صوت عربي في هذا المتصفح، والتسجيلات لم تُنشأ بعد."); return; } if (playing) { playing = false; stopAll(); v.querySelector("#lp").textContent = "▶ تشغيل"; return; } playing = true; v.querySelector("#lp").textContent = "⏸ إيقاف"; mark(idx); queue = items(); next(); };
         v.querySelector("#lnext").onclick = () => { stopAll(); idx = Math.min(d.paras.length - 1, idx + 1); mark(idx); queue = items(); if (playing) next(); };
         v.querySelector("#lprev").onclick = () => { stopAll(); idx = Math.max(0, idx - 1); mark(idx); queue = items(); if (playing) next(); };
         v.querySelector("#lmode").onchange = e => MD.store.set("listenMode", e.target.value);
@@ -322,13 +327,26 @@
             const pl = S.PhraseListGrammar.fromRecognizer(r); d.lines[li].words.forEach(w => pl.addPhrase(w.plain));
             r.recognizing = (_, e) => hear((heardFinal + " " + e.result.text).trim(), false);
             r.recognized = (_, e) => { if (e.result.text) { heardFinal = (heardFinal + " " + e.result.text).trim(); hear(heardFinal, false); } if (state.pos >= d.lines[li].words.length) { stop(); hear(heardFinal, true); } };
-            r.startContinuousRecognitionAsync(); rec = r; v.querySelector("#engine").textContent = "التعرف على الكلام: Azure";
+            r.canceled = (_, e) => { rec = null; stop(); v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">تعذّر التسميع الصوتي (${esc(e.errorDetails || e.reason)}).</b> سمّع كتابةً بدلًا من ذلك.`; };
+            r.startContinuousRecognitionAsync(() => {}, err => { rec = null; stop(); v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">تعذّر تشغيل الميكروفون: ${esc(err)}</b>`; });
+            rec = r; v.querySelector("#engine").textContent = "التعرف على الكلام: Azure";
           } else if (window.SpeechRecognition || window.webkitSpeechRecognition) {
             const R = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); R.lang = "ar-SA"; R.interimResults = true; R.continuous = true;
             R.onresult = e => { let interim = ""; for (let k = e.resultIndex; k < e.results.length; k++) { if (e.results[k].isFinal) heardFinal += " " + e.results[k][0].transcript; else interim += " " + e.results[k][0].transcript; } hear((heardFinal + " " + interim).trim(), false); if (state.pos >= d.lines[li].words.length) { stop(); hear(heardFinal, true); } };
             R.onend = () => { if (rec) { stop(); hear(heardFinal, true); } };
+            R.onerror = e => {
+              if (e.error === "aborted") return;  // our own watchdog stopped it and already explained why
+              const why = {"network": "خدمة التعرف على الكلام في هذا المتصفح غير متاحة (لا تعمل في كروم على لينكس)", "not-allowed": "لم يُسمح باستخدام الميكروفون", "service-not-allowed": "لم يُسمح باستخدام الميكروفون", "audio-capture": "لم يُعثر على ميكروفون", "no-speech": "لم يُسمع كلام", "language-not-supported": "العربية غير مدعومة في هذا المتصفح"}[e.error] || e.error;
+              rec = null; stop();
+              v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">تعذّر التسميع الصوتي: ${esc(why)}.</b> سمّع كتابةً بدلًا من ذلك.`;
+              v.querySelector("details").open = true;
+            };
+            let got = false; const onres = R.onresult; R.onresult = e => { got = true; onres(e); };
             R.start(); rec = R; v.querySelector("#engine").textContent = "التعرف على الكلام: المتصفح";
-          } else { MD.toast("المتصفح لا يدعم التعرف على الكلام؛ سمّع كتابةً."); v.querySelector("details").open = true; return; }
+            setTimeout(() => { if (rec === R && !got) { rec = null; try { R.abort(); } catch {} stop();
+              v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">لم يصل أي نص من خدمة التعرف على الكلام في هذا المتصفح خلال ٨ ثوانٍ (لا تعمل عادةً في كروم على لينكس). ستعمل بعد تفعيل Azure Speech.</b> سمّع كتابةً الآن.`;
+              v.querySelector("details").open = true; } }, 8000);
+          } else { v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">المتصفح لا يدعم التعرف على الكلام، وخدمة Azure Speech لم تُفعَّل بعد.</b> سمّع كتابةً.`; v.querySelector("details").open = true; return; }
           v.querySelector("#mic").textContent = "⏹ أنهِ التسميع";
         };
         reset();
