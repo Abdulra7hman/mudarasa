@@ -14,9 +14,9 @@ Reproduce: `make eval RUNS=3` (needs `.env`), then `python -m eval.make_report`.
 
 10 items are critical. Scoring: page ±1, refusal and referral detection, evidence status, verified-sentence share, latency, tokens, cost (`eval/score.py`).
 
-## Main result: Mudarasa (Azure gpt-5-mini) vs the same model without retrieval
+## Earlier settings: evidence list first, medium judge effort, 8 passages (3 runs)
 
-`full` = the whole pipeline. `no_verify` = the same answers before the quote check and the judge (no extra calls). `no_retrieval` = the same model with no library, citing from memory. 100 items × 3 runs; mean (min–max over runs).
+The same pipeline before the speed comparison below.
 
 **main_v2_gpt5mini**: 100 items × 3 runs · answer model `gpt-5-mini` · judge `gpt-5-mini` · effort medium · embeddings azure:text-embedding-3-small · commit `f447b7c`
 
@@ -94,6 +94,16 @@ Prep questions; 1 run.
 | Errors | 0.0 | 0.0 | 0.0 |
 
 Critical items failed in at least one run: full: Q08; no_verify: Q08; no_retrieval: Q08
+
+## Speed settings compared (30 mixed items, 1 run)
+
+| Setting | Median s | p95 s | Gold page cited | False refusal | Status match | Premise caught | Critical |
+|---|---|---|---|---|---|---|---|
+| Evidence list first, answer medium, judge medium | 32.1 | 45.0 | 89% | 7% | 73% | 100% | 100% |
+| Single pass, answer low, judge low | 12.6 | 17.8 | 100% | 0% | 63% | 75% | 50% |
+| Single pass, answer medium, judge low (chosen) | 26.9 | 37.9 | 96% | 0% | 73% | 100% | 100% |
+
+The fast setting loses a critical false-premise item, so the middle one is used.
 
 ## Retrieval
 
