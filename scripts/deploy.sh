@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Deploy to Azure App Service (Linux, Python). Book texts and built data go in the zip, never through git.
 # Needs: az CLI logged in (az login), .env filled in. First run creates the resources; later runs only redeploy.
-#   APP=mudarasa-demo RG=mudarasa-rg LOC=swedencentral scripts/deploy.sh
+#   APP=mudarasa-demo RG=mudarasa-rg LOC=uaenorth scripts/deploy.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 APP=${APP:-mudarasa-demo}
 RG=${RG:-mudarasa-rg}
-LOC=${LOC:-swedencentral}
+LOC=${LOC:-uaenorth}
 PLAN=${PLAN:-mudarasa-plan}
 
 if ! az webapp show -n "$APP" -g "$RG" >/dev/null 2>&1; then
