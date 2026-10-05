@@ -23,6 +23,7 @@ from .textnorm import normalise, strip_tashkeel
 
 TAKHRIJ_RE = re.compile(r"(أخرجه|اخرجه|رواه|خرَّجه|خرجه|صحح|حسن|ضعف|إسناد|اسناد|الحديث|البخاري|مسلم|أبو داود|ابو داود|الترمذي|النسائي|ابن ماجه|الدارقطني|البيهقي|الحاكم|مسند|سنن|موطأ)")
 VARIANT_RE = re.compile(r"(في \(\s*[أابجده]\s*\)|في \[\s*[أابجده]\s*\]|في نسخة|في النسخ|سقط|ساقطة|في المطبوع|في الأصل|زيادة من)")
+HADITH_RE = re.compile(r"(رواه|أخرجه|اخرجه|حديث|الحديث|مرفوعا|موقوفا|عن النبي)")
 GRADE_RE = re.compile(r"((?:و)?(?:صحَّحه|صححه|حسَّنه|حسنه|ضعَّفه|ضعفه|جوَّد إسناده|جود إسناده|قوَّاه|قواه)(?:\s+[^\s،.؛]+){0,3}"
                       r"|إسناده (?:صحيح|حسن|ضعيف|جيد)|حديث (?:صحيح|حسن|ضعيف|منكر)|(?:لا يصح|لا يثبت|منكر|موضوع|مرسل|منقطع))")
 
@@ -50,8 +51,8 @@ def takhrij_for(p):
         out.append({"source": "محققو الروض المربع (ط ركائز)", "kind": k, "text": n["text"], "vol": n["vol"], "page": n["page"],
                     "link": n["link"], "grades": [g.group(0) for g in GRADE_RE.finditer(strip_tashkeel(n["text"]))],
                     "lemma": n.get("lemma", ""), "dorar": dorar_link(n.get("lemma", "")) if k == "takhrij" else None})
-    for n in p["iq"]:
-        if note_kind(n["text"]) != "takhrij":
+    for n in p["iq"]:  # Ibn Qasim also «صحح» opinions; count his note only when it is about a hadith
+        if note_kind(n["text"]) != "takhrij" or not HADITH_RE.search(strip_tashkeel(n["text"])):
             continue
         out.append({"source": "حاشية ابن قاسم", "kind": "takhrij", "text": n["text"], "vol": n["vol"], "page": n["page"],
                     "link": n["link"], "grades": [g.group(0) for g in GRADE_RE.finditer(strip_tashkeel(n["text"]))],

@@ -22,9 +22,9 @@ Small samples. They show direction, not statistical proof.
 ## Takhrij
 | Chapter | Takhrij notes | With a stated grading | Manuscript-variant notes |
 |---|---|---|---|
-| water | 45 | 21 | 11 |
-| vessels | 23 | 8 | 10 |
-| istinja | 60 | 28 | 11 |
+| water | 32 | 15 | 11 |
+| vessels | 15 | 6 | 10 |
+| istinja | 50 | 22 | 11 |
 
 Every grading shown is a phrase copied from the note itself (highlighted inside the verbatim note).
 

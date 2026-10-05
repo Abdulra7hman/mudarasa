@@ -310,7 +310,7 @@
         v.querySelector("#typed").oninput = e => hear(e.target.value, false);
         v.querySelector("#typed").onchange = e => hear(e.target.value, true);
         let rec = null, heardFinal = "";
-        const stop = () => { if (rec) { try { rec.stop ? rec.stop() : rec.stopContinuousRecognitionAsync(); } catch {} rec = null; } v.querySelector("#mic").textContent = "🎙 ابدأ التسميع"; };
+        const stop = () => { if (rec) { try { rec.stop ? rec.stop() : rec.stopContinuousRecognitionAsync(); } catch {} rec = null; } const mic = v.querySelector("#mic"); if (mic) mic.textContent = "🎙 ابدأ التسميع"; };
         v.querySelector("#mic").onclick = async () => {
           if (rec) { stop(); hear(heardFinal, true); return; }
           heardFinal = ""; reset();
