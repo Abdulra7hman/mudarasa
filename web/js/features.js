@@ -325,7 +325,10 @@
             const S = window.SpeechSDK, cfg = S.SpeechConfig.fromAuthorizationToken(tok.token, tok.region); cfg.speechRecognitionLanguage = "ar-SA";
             const r = new S.SpeechRecognizer(cfg, S.AudioConfig.fromDefaultMicrophoneInput());
             const pl = S.PhraseListGrammar.fromRecognizer(r); d.lines[li].words.forEach(w => pl.addPhrase(w.plain));
-            r.recognizing = (_, e) => hear((heardFinal + " " + e.result.text).trim(), false);
+            let heardAny = false;
+            r.recognizing = (_, e) => { heardAny = true; hear((heardFinal + " " + e.result.text).trim(), false); };
+            setTimeout(() => { if (rec === r && !heardAny && !heardFinal) {
+              v.querySelector("#result").innerHTML = `<b style="color:var(--warn)">لم نسمع صوتًا بعد. تأكد أن الميكروفون غير مكتوم في إعدادات الجهاز، وأن المتصفح يستخدم الميكروفون الصحيح (رمز الكاميرا/الميكروفون في شريط العنوان).</b>`; } }, 8000);
             r.recognized = (_, e) => { if (e.result.text) { heardFinal = (heardFinal + " " + e.result.text).trim(); hear(heardFinal, false); } if (state.pos >= d.lines[li].words.length) { stop(); hear(heardFinal, true); } };
             r.canceled = (_, e) => { rec = null; stop(); v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">تعذّر التسميع الصوتي (${esc(e.errorDetails || e.reason)}).</b> سمّع كتابةً بدلًا من ذلك.`; };
             r.startContinuousRecognitionAsync(() => {}, err => { rec = null; stop(); v.querySelector("#result").innerHTML = `<b style="color:var(--bad)">تعذّر تشغيل الميكروفون: ${esc(err)}</b>`; });
