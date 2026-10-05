@@ -25,8 +25,8 @@ LLM_PROVIDER = env("LLM_PROVIDER", "ollama")
 def _openai_host(url):
     """Accept any endpoint form Azure shows (resource, /openai/v1/, Foundry project URL) and keep the OpenAI host."""
     import re
-    m = re.match(r"https?://([^/.]+)\.(openai\.azure\.com|services\.ai\.azure\.com|cognitiveservices\.azure\.com)", url or "")
-    return f"https://{m.group(1)}.openai.azure.com" if m else (url or "").rstrip("/")
+    m = re.match(r"https?://([^/.]+\.(?:openai\.azure\.com|services\.ai\.azure\.com|cognitiveservices\.azure\.com))", url or "")
+    return f"https://{m.group(1)}" if m else (url or "").rstrip("/")
 
 
 AZURE_OPENAI_ENDPOINT = _openai_host(env("AZURE_OPENAI_ENDPOINT"))
