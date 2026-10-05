@@ -1,0 +1,46 @@
+{
+ "tag": "speed_C_medium_nolist",
+ "set": "/home/d7/Desktop/MUDARASA/mudarasa/eval/testset.jsonl",
+ "items": 30,
+ "systems": "full",
+ "runs": 1,
+ "provider": "azure",
+ "answer_model": "gpt-5-mini",
+ "judge_model": "gpt-5-mini",
+ "effort_answer": "medium",
+ "effort_judge": "low",
+ "embed": "azure:text-embedding-3-small",
+ "commit": "5081589",
+ "started": "2026-10-06T00:13:33",
+ "prices": {
+  "gpt-5": [
+   1.25,
+   10.0
+  ],
+  "gpt-5-mini": [
+   0.25,
+   2.0
+  ],
+  "gpt-5-nano": [
+   0.05,
+   0.4
+  ],
+  "openai/gpt-5": [
+   1.25,
+   10.0
+  ],
+  "openai/gpt-5-mini": [
+   0.25,
+   2.0
+  ],
+  "text-embedding-3-large": [
+   0.13,
+   0.0
+  ],
+  "text-embedding-3-small": [
+   0.02,
+   0.0
+  ]
+ },
+ "finished": "2026-10-06T00:15:59"
+}

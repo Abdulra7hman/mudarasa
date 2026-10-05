@@ -67,9 +67,10 @@ def _gate(question, provider):
     return scope, st
 
 
-def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8, events=None):
+def answer(question, para=None, retrieval=True, verify=True, provider=None, k=None, events=None):
     """events(kind, payload): optional progress callback ("stage", name) / ("passages", list), used for streaming."""
     t0, calls = time.time(), []
+    k = k or C.RETRIEVE_K
     emit = events or (lambda kind, payload: None)
     res = {"question": question, "para": para, "retrieval": retrieval, "verify": verify}
     # the scope check runs alongside search and answer; a refusal discards the answer (refusals are rare and cheap)

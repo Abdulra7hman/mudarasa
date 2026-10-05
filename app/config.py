@@ -43,6 +43,7 @@ EFFORT_JUDGE = env("EFFORT_JUDGE", "low")
 EFFORT_GATE = env("EFFORT_GATE", "minimal")          # the scope check is a short classification
 PARALLEL_GATE = flag("PARALLEL_GATE", True)          # run the scope check alongside search + answer
 EVIDENCE_FIRST = flag("EVIDENCE_FIRST", True)        # the model lists evidence before writing sentences (slower, prep v2)
+RETRIEVE_K = int(env("RETRIEVE_K", "8"))             # passages given to the model
 
 EMBED_PROVIDER = env("EMBED_PROVIDER", "ollama")  # azure | ollama | none
 MODEL_EMBED = env("MODEL_EMBED", "text-embedding-3-large")
