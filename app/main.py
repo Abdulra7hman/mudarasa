@@ -3,13 +3,15 @@
 Run locally:  make run   (http://127.0.0.1:8000)
 Logs (no personal data, no IP addresses): data/logs/questions.jsonl, data/logs/reports.jsonl
 """
+import asyncio
 import json
+import queue
 import threading
 import time
 from collections import defaultdict, deque
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import books as B
@@ -84,40 +86,83 @@ def chapter(cid: str):
     return {"id": cid, "title": ch["title"], "paras": paras}
 
 
-@app.post("/api/ask")
-async def ask(request: Request):
+async def _question(request: Request):
     body = await request.json()
     q = (body.get("question") or "").strip()[:500]
-    para = body.get("para") or None
     if not q:
         raise HTTPException(400, "اكتب سؤالًا")
-    key = normalise(q) + "|" + (para or "")
-    if key in _cache:
-        res = {**_cache[key], "cached": True}
-    else:
-        _limit(request)
+    return q, body.get("para") or None
+
+
+def _run(q, para, events=None):
+    """The pipeline, or search-only mode when the model is unreachable."""
+    try:
+        return pipeline.answer(q, para=para, events=events)
+    except Exception as e:  # model outage: show the cited passages only (search-only mode)
         try:
-            res = pipeline.answer(q, para=para)
-        except Exception as e:  # model outage: show the cited passages only (search-only mode)
-            try:
-                shown = pipeline.retriever().search(q, para=para)
-            except Exception:
-                shown = []
-            res = {"question": q, "scope": "answerable", "status": "not_found", "status_ar": "وضع البحث فقط",
-                   "message": "تعذر الوصول إلى نموذج اللغة الآن. هذه أقرب النصوص إلى سؤالك من الكتب المعتمدة، دون جواب مولَّد.",
-                   "sentences": [], "dropped": [], "search_only": True, "error": type(e).__name__,
-                   "passages": [{"n": i, **pipeline._cite(p), "text": p["text"], "para": p.get("para")} for i, p in enumerate(shown, 1)]}
-        if not res.get("search_only") and (res.get("sentences") or res.get("scope") in P.REFUSALS):
-            with _lock:
-                _cache[key] = {k: v for k, v in res.items() if k != "calls"}
-                if len(_cache) % 5 == 0:
-                    CACHE_FILE.write_text(json.dumps(_cache, ensure_ascii=False), encoding="utf-8")
+            shown = pipeline.retriever().search(q, para=para)
+        except Exception:
+            shown = []
+        return {"question": q, "scope": "answerable", "status": "not_found", "status_ar": "وضع البحث فقط",
+                "message": "تعذر الوصول إلى نموذج اللغة الآن. هذه أقرب النصوص إلى سؤالك من الكتب المعتمدة، دون جواب مولَّد.",
+                "sentences": [], "dropped": [], "search_only": True, "error": type(e).__name__,
+                "passages": [{"n": i, **pipeline._cite(p), "text": p["text"], "para": p.get("para")} for i, p in enumerate(shown, 1)]}
+
+
+def _finish(q, para, key, res):
+    """Cache good answers, log the measurements (no personal data), drop internal fields."""
+    if not res.get("cached") and not res.get("search_only") and (res.get("sentences") or res.get("scope") in P.REFUSALS):
+        with _lock:
+            _cache[key] = {k: v for k, v in res.items() if k != "calls"}
+            if len(_cache) % 5 == 0:
+                CACHE_FILE.write_text(json.dumps(_cache, ensure_ascii=False), encoding="utf-8")
     _log("questions.jsonl", {"question": q, "para": para, "scope": res.get("scope"), "status": res.get("status"),
                              "kept": len(res.get("sentences", [])), "dropped": len(res.get("dropped", [])),
                              "latency_s": res.get("latency_s"), "cost_usd": res.get("cost_usd"),
                              "input_tokens": res.get("input_tokens"), "output_tokens": res.get("output_tokens"),
                              "cached": bool(res.get("cached")), "search_only": bool(res.get("search_only"))})
-    return JSONResponse({k: v for k, v in res.items() if k != "calls"})
+    return {k: v for k, v in res.items() if k != "calls"}
+
+
+@app.post("/api/ask")
+async def ask(request: Request):
+    q, para = await _question(request)
+    key = normalise(q) + "|" + (para or "")
+    if key in _cache:
+        res = {**_cache[key], "cached": True}
+    else:
+        _limit(request)
+        res = await asyncio.get_running_loop().run_in_executor(None, _run, q, para)
+    return JSONResponse(_finish(q, para, key, res))
+
+
+@app.post("/api/ask_stream")
+async def ask_stream(request: Request):
+    """Server-sent events: stage changes and the passages as soon as they are found, then the checked answer."""
+    q, para = await _question(request)
+    key = normalise(q) + "|" + (para or "")
+    cached = _cache.get(key)
+    if not cached:
+        _limit(request)
+    events = queue.Queue()
+
+    def work():
+        res = {**cached, "cached": True} if cached else _run(q, para, events=lambda kind, payload: events.put((kind, payload)))
+        events.put(("result", _finish(q, para, key, res)))
+        events.put(None)
+
+    threading.Thread(target=work, daemon=True).start()
+
+    async def stream():
+        loop = asyncio.get_running_loop()
+        while True:
+            item = await loop.run_in_executor(None, events.get)
+            if item is None:
+                break
+            kind, payload = item
+            yield f"event: {kind}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.post("/api/report")

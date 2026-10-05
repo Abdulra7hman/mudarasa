@@ -49,7 +49,7 @@ def client(provider):
 
 
 def model_for(role, provider):
-    m = {"answer": C.MODEL_ANSWER, "judge": C.MODEL_JUDGE, "fallback": C.MODEL_ANSWER_FALLBACK}[role]
+    m = {"answer": C.MODEL_ANSWER, "judge": C.MODEL_JUDGE, "gate": C.MODEL_JUDGE, "fallback": C.MODEL_ANSWER_FALLBACK}[role]
     if provider == "github" and "/" not in m:
         m = "openai/" + m
     return m
@@ -107,7 +107,7 @@ def ask(system, user, schema, role="answer", provider=None, model=None, effort=N
     if provider == "ollama":
         return _ollama_ask(system, user, schema)
     model = model or model_for(role, provider)
-    effort = effort if effort is not None else (C.EFFORT_JUDGE if role == "judge" else C.EFFORT_ANSWER)
+    effort = effort if effort is not None else {"judge": C.EFFORT_JUDGE, "gate": C.EFFORT_GATE}.get(role, C.EFFORT_ANSWER)
     try:
         return _openai_ask(provider, model, system, user, schema, effort or None, max_out)
     except Exception:

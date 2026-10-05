@@ -9,9 +9,11 @@
 
 Adapted from prep/demo/server.py (answer). Steps 2 and 4-5 can be switched off for the comparison runs in eval/.
 """
+import concurrent.futures
 import re
 import time
 
+from . import config as C
 from . import llm
 from . import prompts as P
 from .textnorm import normalise
@@ -52,15 +54,33 @@ def _sum(calls, key):
     return round(sum(vals), 6) if vals else None
 
 
-def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8):
-    t0, calls = time.time(), []
-    res = {"question": question, "para": para, "retrieval": retrieval, "verify": verify}
+_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=8)
 
-    gate, st = llm.ask(P.SCOPE_RULES, f"السؤال: {question}", P.SCHEMA_SCOPE, role="judge", provider=provider, max_out=800)
-    calls.append({"step": "scope", **st})
+
+def _gate(question, provider):
+    gate, st = llm.ask(P.SCOPE_RULES, f"السؤال: {question}", P.SCHEMA_SCOPE, role="gate", provider=provider, max_out=1500)
     scope = gate.get("scope", "answerable") if isinstance(gate, dict) else "answerable"
+    if scope not in P.SCOPE_ENUM:
+        scope = "answerable"
     if scope == "answerable" and FIRST_PERSON.search(normalise(question)):
         scope = "personal_fatwa"
+    return scope, st
+
+
+def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8, events=None):
+    """events(kind, payload): optional progress callback ("stage", name) / ("passages", list), used for streaming."""
+    t0, calls = time.time(), []
+    emit = events or (lambda kind, payload: None)
+    res = {"question": question, "para": para, "retrieval": retrieval, "verify": verify}
+    # the scope check runs alongside search and answer; a refusal discards the answer (refusals are rare and cheap)
+    parallel = C.PARALLEL_GATE and retrieval
+    gate_future = _POOL.submit(_gate, question, provider) if parallel else None
+    if not parallel:
+        emit("stage", "scope")
+        scope, st = _gate(question, provider)
+        calls.append({"step": "scope", **st})
+    else:
+        scope = None
     res["scope"] = scope
 
     def done(**kw):
@@ -73,7 +93,15 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
     if scope in P.REFUSALS:
         return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
 
-    personal = scope == "personal_fatwa"
+    def gate_result():
+        nonlocal scope
+        if gate_future is not None and scope is None:
+            scope, st = gate_future.result()
+            calls.append({"step": "scope", **st})
+            res["scope"] = scope
+        return scope
+
+    personal = (scope == "personal_fatwa") or (scope is None and bool(FIRST_PERSON.search(normalise(question))))
     if not retrieval:  # closed-book baseline: the same model, no library, cites from memory
         ans, st = llm.ask(P.CLOSED_FAIR, f"السؤال: {question}", P.SCHEMA_CLOSED, role="answer", provider=provider)
         calls.append({"step": "answer", **st})
@@ -82,18 +110,28 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
         return done(status=ans.get("status", "not_found"), premise_correct=ans.get("premise_correct"), message=None,
                     sentences=sents, dropped=[], raw_sentences=sents, passages=[])
 
+    emit("stage", "search")
     shown = retriever().search(question, k=k, para=para)
     passages = [{"n": i, **_cite(p), "text": p["text"], "para": p.get("para")} for i, p in enumerate(shown, 1)]
+    emit("passages", passages)
+    emit("stage", "write")
     ctx = "\n\n".join(f"[P{i}] {p['book']}، ج{p['vol']} ص{p['page']} ({p['kind']}):\n{p['text']}" for i, p in enumerate(shown, 1))
-    system = P.RULES_V2 + (P.GENERAL_MODE if personal else "")
+    rules, schema = (P.RULES_V2, P.SCHEMA_ANSWER) if C.EVIDENCE_FIRST else (P.RULES_FAST, P.SCHEMA_ANSWER_FAST)
+    system = rules + (P.GENERAL_MODE if personal else "")
     try:
-        ans, st = llm.ask(system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", P.SCHEMA_ANSWER, role="answer", provider=provider)
+        ans, st = llm.ask(system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", schema, role="answer", provider=provider)
     except Exception as e:
         if "content management policy" not in str(e) and "content_filter" not in str(e):
             raise
+        gate_result()
+        if scope in P.REFUSALS:
+            return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
         return done(status="not_found", message=P.FILTERED, sentences=[], dropped=[], raw_sentences=[], passages=passages,
                     filtered=True, model_status=None)
     calls.append({"step": "answer", **st})
+    if gate_result() in P.REFUSALS:  # the parallel scope check says: refuse, and discard the answer
+        return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
+    personal = scope == "personal_fatwa"
 
     checked = []
     for s in ans.get("sentences") or []:
@@ -108,6 +146,7 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
     raw = [dict(c) for c in checked]
 
     if verify:
+        emit("stage", "verify")
         kept = [c for c in checked if c["quote_ok"]]
         dropped = [c for c in checked if not c["quote_ok"]]
         if kept:

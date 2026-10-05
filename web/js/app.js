@@ -179,14 +179,38 @@ async function ask() {
     <div id="out">${MD.state.last ? answerHTML(MD.state.last) : ""}</div>`;
   if (MD.state.last) bindAnswer(MD.state.last);
   if (ctx) $("#clearCtx").onclick = () => { MD.state.askPara = null; ask(); };
+  const STAGES = {scope: "يفهم السؤال…", search: "يبحث في الكتب…", write: "وجد النصوص، ويكتب الجواب منها…", verify: "يتحقق من كل جملة واقتباسها…"};
   const go = async q => {
     if (!q.trim()) return;
-    $("#go").disabled = true; let t = 0;
-    $("#out").innerHTML = `<div class="card spin" id="sp">يبحث في الكتب ويكتب الجواب ثم يتحقق من كل جملة…</div>`;
-    const timer = setInterval(() => { t++; const sp = $("#sp"); if (sp) sp.textContent = `يبحث في الكتب ويكتب الجواب ثم يتحقق من كل جملة… ${MD.digits(t)} ث`; }, 1000);
-    try { const r = await MD.api("/api/ask", {question: q, para: ctx ? ctx.id : null}); MD.state.last = r; $("#out").innerHTML = answerHTML(r); bindAnswer(r); }
-    catch (e) { $("#out").innerHTML = `<div class="card dropped">${MD.esc(e.message)}</div>`; }
-    finally { clearInterval(timer); $("#go").disabled = false; }
+    $("#go").disabled = true; let t = 0, stage = "search";
+    $("#out").innerHTML = `<div class="card"><div class="spin" id="sp"></div><div id="early"></div></div>`;
+    const tick = () => { const sp = $("#sp"); if (sp) sp.textContent = `${STAGES[stage] || ""} ${MD.digits(t)} ث`; };
+    tick(); const timer = setInterval(() => { t++; tick(); }, 1000);
+    const show = r => { MD.state.last = r; $("#out").innerHTML = answerHTML(r); bindAnswer(r); };
+    const body = {question: q, para: ctx ? ctx.id : null};
+    try {
+      const resp = await fetch("/api/ask_stream", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+      if (!resp.ok || !resp.body) throw new Error("stream unavailable");
+      const reader = resp.body.getReader(), dec = new TextDecoder(); let buf = "", got = false;
+      while (true) {
+        const {value, done} = await reader.read(); if (done) break;
+        buf += dec.decode(value, {stream: true});
+        let i;
+        while ((i = buf.indexOf("\n\n")) >= 0) {
+          const block = buf.slice(0, i); buf = buf.slice(i + 2);
+          const kind = (block.match(/^event: (.*)$/m) || [])[1], data = JSON.parse((block.match(/^data: (.*)$/m) || [, "null"])[1]);
+          if (kind === "stage") { stage = data; tick(); }
+          else if (kind === "passages" && data.length) {
+            $("#early").innerHTML = `<details open><summary>النصوص التي وُجدت (${MD.digits(data.length)})، اقرأها حتى يكتمل الجواب</summary>` +
+              data.map(p => `<div class="passage"><h4>[${MD.digits(p.n)}] ${MD.ref(p)} · ${MD.esc(p.kind)} · <a href="${p.link}" target="_blank" rel="noopener">افتح الصفحة</a></h4><div class="book">${MD.esc(MD.view(p.text))}</div></div>`).join("") + `</details>`;
+          } else if (kind === "result") { got = true; show(data); }
+        }
+      }
+      if (!got) throw new Error("no result");
+    } catch (e) {  // no streaming (proxy, old browser): the plain endpoint
+      try { show(await MD.api("/api/ask", body)); }
+      catch (e2) { $("#out").innerHTML = `<div class="card dropped">${MD.esc(e2.message)}</div>`; }
+    } finally { clearInterval(timer); $("#go").disabled = false; }
   };
   $("#f").onsubmit = e => { e.preventDefault(); go($("#q").value); };
   $("#q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); go($("#q").value); } });
