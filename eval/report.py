@@ -80,7 +80,9 @@ def fmt(v, pct=True):
 
 def table(meta, agg):
     systems = [s for s in ("full", "no_verify", "no_retrieval") if s in agg] + [s for s in agg if s not in ("full", "no_verify", "no_retrieval")]
-    out = [f"**{meta.get('tag', '')}**: {meta.get('items')} items × {meta.get('runs')} runs · answer model `{meta.get('answer_model')}` · "
+    runs = max(agg[s]["runs"] for s in systems) if systems else 0
+    n = max(agg[s]["n"] for s in systems) if systems else 0
+    out = [f"**{meta.get('tag', '')}**: {n} items × {runs} run{'s' if runs != 1 else ''} · answer model `{meta.get('answer_model')}` · "
            f"judge `{meta.get('judge_model')}` · effort {meta.get('effort_answer')} · embeddings {meta.get('embed')} · commit `{meta.get('commit')}`", "",
            "| Metric | " + " | ".join(systems) + " |", "|---|" + "---|" * len(systems)]
     for key, label in METRICS + [("unverified_shown_share", "Shown sentences without verified support"),

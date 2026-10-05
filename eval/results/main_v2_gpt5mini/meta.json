@@ -1,17 +1,17 @@
 {
- "tag": "v1_before_fixes",
+ "tag": "main_v2_gpt5mini",
  "set": "eval/testset.jsonl",
  "items": 100,
  "systems": "full,no_retrieval",
- "runs": 1,
+ "runs": 3,
  "provider": "azure",
  "answer_model": "gpt-5-mini",
  "judge_model": "gpt-5-mini",
  "effort_answer": "medium",
  "effort_judge": "medium",
  "embed": "azure:text-embedding-3-small",
- "commit": "38b7f4c",
- "started": "2026-10-05T22:57:47",
+ "commit": "f447b7c",
+ "started": "2026-10-05T23:15:18",
  "prices": {
   "gpt-5": [
    1.25,
