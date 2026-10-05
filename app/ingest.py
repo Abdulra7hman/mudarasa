@@ -266,6 +266,7 @@ def build():
                difflib.SequenceMatcher(None, wa, wb, autojunk=False).get_opcodes() if t != "equal"]
         ops = [o for o in ops if not re.fullmatch(r"[٠-٩0-9 ]*", o[1] + o[2])]
         anchor[i]["rakaiz_unit"] = r_units[j]["id"]
+        anchor[i]["rakaiz_matn"] = r_units[j]["matn"]
         anchor[i]["edition_diffs"] = ops[:12]
     for p in r_paras:  # Rakaiz paragraph -> anchor paragraphs
         targets = []
@@ -325,7 +326,7 @@ def build():
         pid = unit_para(r["anchor_unit"])
         if pid:
             paras_out[pid]["rakaiz_notes"].append({"id": f"rk{k + 1}", "n": r["n"], "text": r["note"], **ref(147658, r["pg"]),
-                                                   "unit": r["anchor_unit"]})
+                                                   "unit": r["anchor_unit"], "lemma": r["lemma"]})
     for p in r_paras:
         if p["anchor_paras"]:
             paras_out[p["anchor_paras"][0]]["rakaiz_paras"].append({"id": p["id"], "text": p["text"], **ref(147658, p["pg"])})
@@ -337,7 +338,7 @@ def build():
             paras_out[pid]["mumti"].append({**{k: s[k] for k in ("id", "heading", "method", "score", "lines")}, "unit": s["anchor_unit"]})
 
     units_out = {u["id"]: {k: u[k] for k in ("id", "chapter", "para", "pg", "matn", "text")} | {
-        "rakaiz_unit": u.get("rakaiz_unit"), "edition_diffs": u.get("edition_diffs", [])} for u in anchor}
+        "rakaiz_unit": u.get("rakaiz_unit"), "rakaiz_matn": u.get("rakaiz_matn"), "edition_diffs": u.get("edition_diffs", [])} for u in anchor}
     rakaiz_out = [{"id": p["id"], "chapter": p["chapter"], "text": p["text"], "heading": p["heading"],
                    "anchor_paras": p["anchor_paras"], **ref(147658, p["pg"])} for p in r_paras]
     chapters = [{"id": cid, "title": title, "paras": [p["id"] for p in a_paras if p["chapter"] == cid]} for cid, title in CHAPTERS]

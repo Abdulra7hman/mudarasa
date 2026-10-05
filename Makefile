@@ -22,11 +22,15 @@ run:
 model-check:
 	$(PY) -m scripts.model_check
 
+
 eval-quick:
 	$(PY) -m eval.run --set eval/quick.jsonl --systems full --runs 1
 
 eval:
-	$(PY) -m eval.run --systems full,no_retrieval --runs $(RUNS) && $(PY) -m eval.report
+	$(PY) -m eval.run --systems full,no_retrieval --runs $(RUNS)
+
+report:
+	$(PY) -m eval.report $$(ls -d eval/results/*/ | tail -1)
 
 label-sheet:
 	$(PY) -m eval.linking.make_label_sheet
