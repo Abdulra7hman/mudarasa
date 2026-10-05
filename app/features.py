@@ -188,12 +188,13 @@ def register(app, study):
     @app.get("/api/listen/{cid}")
     def listen(cid: str):
         """Reading order for the listen view: Rakaiz (vocalized) paragraphs, each with the Ibn Qasim notes of its anchor paragraph."""
-        out = []
+        out, seen = [], set()
         for r in study["rakaiz_paras"]:
             if r["chapter"] != cid:
                 continue
             notes = []
-            for ap in r["anchor_paras"][:1]:
+            for ap in [a for a in r["anchor_paras"] if a not in seen][:1]:  # each anchor paragraph's notes once
+                seen.add(ap)
                 notes = [{"id": n["id"], "n": n["n"], "text": n["text"], "vol": n["vol"], "page": n["page"], "link": n["link"],
                           "lemma": n["lemma"]} for n in study["paras"][ap]["iq"]]
             out.append({"id": r["id"], "text": r["text"], "heading": r["heading"], "vol": r["vol"], "page": r["page"], "link": r["link"],
