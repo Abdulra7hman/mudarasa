@@ -100,6 +100,7 @@ async function study(cid = "water") {
   const ch = await chapterData(cid);
   const cfg = MD.state.cfg;
   let h = `<div class="chapters" role="group" aria-label="الأبواب">${cfg.chapters.map(c => `<button class="${c.id === cid ? "on" : ""}" data-ch="${c.id}">${MD.esc(c.title)}</button>`).join("")}</div>`;
+  h += `<div class="suggest" aria-label="جرّب سؤالًا"><span class="meta">جرّب:</span>${cfg.suggested.map(s => `<button data-try="${MD.esc(s.q)}">${MD.esc(s.q)}<small>${MD.esc(s.kind)}</small></button>`).join("")}</div>`;
   h += `<p class="meta">«الروض المربع» (ط الرسالة)؛ المتن (زاد المستقنع) بلون مختلف. اضغط على فقرة لتفتح حواشيها وشروحها.</p>`;
   h += ch.paras.map(p => `<div class="card para" data-pid="${p.id}" tabindex="0">
     ${p.heading ? `<div class="meta">${MD.esc(p.heading)}</div>` : ""}
@@ -109,6 +110,7 @@ async function study(cid = "water") {
     ${p.rakaiz_notes.length ? `<span class="pill">تخريج وفروق ${MD.digits(p.rakaiz_notes.length)}</span>` : ""}</div></div>`).join("");
   v.innerHTML = h;
   v.querySelectorAll("[data-ch]").forEach(b => b.onclick = () => location.hash = "#/study/" + b.dataset.ch);
+  v.querySelectorAll("[data-try]").forEach(b => b.onclick = () => { MD.state.askPara = null; MD.state.pendingQ = b.dataset.try; location.hash = "#/ask"; });
   v.querySelectorAll(".para").forEach(el => {
     const open = e => {
       if (e.target.closest(".panel") || e.target.closest("a")) return;
