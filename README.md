@@ -100,6 +100,8 @@ python -m scripts.model_check "azure:gpt-5.4:low" "azure:gpt-5.4-mini:low"   # m
 - The linking is automatic and hasn't been hand-checked yet.
 - The test set is model-drafted.
 - The judges are models: they reduce unsupported sentences but cannot guarantee their absence. The user always gets the page to check.
+- gpt-5-mini both writes the answers and judges them. It's a separate, strict call, but a different judge model would be stronger. gpt-5.4 and gpt-5-nano had no quota on the new subscription.
+- The live search uses keywords plus Azure embeddings (95% gold page in the top 8). Local BGE-M3 reaches 99% but needs a larger server.
 - Hadith gradings are shown only as a library book states them.
 - Recitation checking depends on speech recognition of classical Arabic, so treat its mistake flags as hints.
 - See [STARTING_POINT.md](STARTING_POINT.md) for what existed before the build window.

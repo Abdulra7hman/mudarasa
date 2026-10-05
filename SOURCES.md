@@ -25,15 +25,20 @@
 | Al-Durar Al-Saniyyah (dorar.net/hadith) | A **link-out only**: «ابحث عنه في الدرر السنية» opens Dorar's own search in the browser | No Dorar data is fetched or stored. Dorar blocks scripted requests (Cloudflare 403 on 5 Oct), and we do not get around that. The organizers' reference package names dorar.net/hadith for checking hadith. *Dorar's API terms page could not be read by script; a team member must read it in a browser and record it here.* |
 | The organizers' reference package (المرجعية والحزمة العلمية) | The four content levels, see CONTENT.md | — |
 
-## Models and cloud services
-| Service | Use | Notes |
-|---|---|---|
-| Azure OpenAI (deployment names in `.env`; versions pinned, auto-upgrade off) | Answers, scope gate, support judge, study tools | Data stays in the Azure resource; Microsoft does not use it for training (Azure OpenAI data policy) |
-| Azure OpenAI `text-embedding-3-large` (1024 dims) | Dense search | |
-| Azure AI Speech: neural TTS `ar-SA-HamedNeural`; speech to text `ar-SA` | Audio reading (pre-generated); recitation | The browser receives a 10-minute token; the key stays on the server |
-| Gemma 4 E4B (`gemma4:e4b-it-qat`) via Ollama, local | Backup that doesn't depend on one vendor (scored in eval) | Gemma terms of use |
-| BGE-M3 via Ollama, local | Embeddings backup | MIT |
-| GitHub Models | Free trial of models before buying (development only) | GitHub Models terms |
+## Models and cloud services (as deployed, 5 Oct 2026)
+| Service | Deployment | Use | Where the data is processed |
+|---|---|---|---|
+| Azure OpenAI **gpt-5-mini** (2025-08-07; retires 9 Feb 2027) | Global Standard, resource in **UAE North**, version pinned ("once the current version expires") | Answers, scope gate, support judge, study tools | Global Standard: Azure may process a request in any region; stored data stays in the resource's geography. In UAE North, chat models are offered only as Global Standard |
+| Azure OpenAI **text-embedding-3-small** (1024 dimensions) | **Standard (regional)**, UAE North | Dense search | Inside UAE North |
+| Azure AI Speech, neural TTS `ar-SA-HamedNeural`; speech to text `ar-SA` | F0 (free), **UAE North** | Recordings for listening, made offline; recitation | Inside UAE North. The browser gets a 10-minute token; the key stays on the server |
+| Gemma 4 E4B (`gemma4:e4b-it-qat`) via Ollama, local | — | Backup that doesn't depend on one vendor, scored in the evaluation | On the machine |
+| BGE-M3 via Ollama, local | — | Embeddings backup (local hybrid search: 99% gold page in the top 8, against 95% for the deployed hybrid; eval/RETRIEVAL.md) | On the machine |
+
+**Model choice.**
+- gpt-5.4, gpt-5.4-mini and gpt-5-nano had **no quota** on the new subscription. The quota request is pending.
+- gpt-5-mini was available (500K TPM), so it serves as both answer model and judge.
+- The judge is a separate, strict call. It sees only the question, each sentence, its quote and the quote's surrounding text. The word-for-word quote check doesn't depend on any model.
+- A different judge model would be stronger. That is listed under Limits, and switching models is one line in `.env`.
 
 ## Software (direct dependencies)
 | Component | Licence |

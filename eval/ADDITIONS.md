@@ -12,7 +12,9 @@ Small samples. They show direction, not statistical proof.
 ## Study tools
 | Chapter | Sections | Items generated | Quote verified | Judge supported (shown) |
 |---|---|---|---|---|
-| vessels | 1 | 13 | 13 (100%) | 10 (77%) |
+| istinja | 5 | 59 | 55 (93%) | 50 (85%) |
+| vessels | 3 | 36 | 32 (89%) | 24 (67%) |
+| water | 9 | 107 | 97 (91%) | 87 (81%) |
 
 ## Word meaning
 - Ibn Qasim glosses as gold: top-1 correct for 18/20 words. This is partly circular, because the glossary is built from these notes; it tests lookup, stemming and ranking.
@@ -31,7 +33,7 @@ Every grading shown is a phrase copied from the note itself (highlighted inside 
 ## Audio
 | Chapter | Clips | Duration | Characters | Word timings mapped to displayed words |
 |---|---|---|---|---|
-| istinja | 198 | 67 min | 43875 | 921/1195 (77%) |
+| istinja | 205 | 68 min | 44682 | 967/1252 (77%) |
 | vessels | 110 | 36 min | 23147 | 461/619 (74%) |
 | water | 307 | 94 min | 62107 | 1724/2169 (79%) |
 
