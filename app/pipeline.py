@@ -1,0 +1,127 @@
+"""The answer pipeline. Each step exists so that a sentence is either traced to a page or withheld.
+
+  1. scope gate (separate, cheaper call): other madhhab / contemporary / unrelated -> fixed wording, no generation
+  2. retrieval: the open paragraph's commentary first, then hybrid search over the library (top 8)
+  3. evidence-first answer: every sentence carries a passage number and a verbatim quote
+  4. quote check: the quote must exist (after normalising) in the cited passage
+  5. support judge (cheaper model): does the quote actually say what the sentence says?
+  6. evidence status recomputed from what survives; personal-fatwa and false-premise wording from the answer policy
+
+Adapted from prep/demo/server.py (answer). Steps 2 and 4-5 can be switched off for the comparison runs in eval/.
+"""
+import re
+import time
+
+from . import llm
+from . import prompts as P
+from .textnorm import normalise
+
+_RET = None
+PMARK = re.compile(r"\s*[\[(]\s*P\d+\s*[\])]\s*")
+
+
+def retriever():
+    global _RET
+    if _RET is None:
+        from .retrieval import Retriever
+        _RET = Retriever()
+    return _RET
+
+
+def _cite(p):
+    return {k: p[k] for k in ("book_id", "book", "vol", "page", "pg", "kind", "link", "id")}
+
+
+def _sum(calls, key):
+    vals = [c.get(key) for c in calls if c.get(key) is not None]
+    return round(sum(vals), 6) if vals else None
+
+
+def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8):
+    t0, calls = time.time(), []
+    res = {"question": question, "para": para, "retrieval": retrieval, "verify": verify}
+
+    gate, st = llm.ask(P.SCOPE_RULES, f"السؤال: {question}", P.SCHEMA_SCOPE, role="judge", provider=provider, max_out=800)
+    calls.append({"step": "scope", **st})
+    scope = gate.get("scope", "answerable") if isinstance(gate, dict) else "answerable"
+    res["scope"] = scope
+
+    def done(**kw):
+        res.update(kw)
+        res["status_ar"] = P.STATUS_AR.get(res.get("status"), res.get("status"))
+        res.update(calls=calls, latency_s=round(time.time() - t0, 1), cost_usd=_sum(calls, "cost_usd"),
+                   input_tokens=_sum(calls, "input_tokens"), output_tokens=_sum(calls, "output_tokens"))
+        return res
+
+    if scope in P.REFUSALS:
+        return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
+
+    personal = scope == "personal_fatwa"
+    if not retrieval:  # closed-book baseline: the same model, no library, cites from memory
+        ans, st = llm.ask(P.CLOSED_FAIR, f"السؤال: {question}", P.SCHEMA_CLOSED, role="answer", provider=provider)
+        calls.append({"step": "answer", **st})
+        sents = [{"text": s.get("text", ""), "book": s.get("book"), "vol": s.get("vol"), "page": s.get("page"), "quote": s.get("quote")}
+                 for s in (ans.get("sentences") or [])]
+        return done(status=ans.get("status", "not_found"), premise_correct=ans.get("premise_correct"), message=None,
+                    sentences=sents, dropped=[], raw_sentences=sents, passages=[])
+
+    shown = retriever().search(question, k=k, para=para)
+    ctx = "\n\n".join(f"[P{i}] {p['book']}، ج{p['vol']} ص{p['page']} ({p['kind']}):\n{p['text']}" for i, p in enumerate(shown, 1))
+    system = P.RULES_V2 + (P.GENERAL_MODE if personal else "")
+    ans, st = llm.ask(system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", P.SCHEMA_ANSWER, role="answer", provider=provider)
+    calls.append({"step": "answer", **st})
+
+    checked = []
+    for s in ans.get("sentences") or []:
+        digits = re.findall(r"\d+", str(s.get("passage", "")))
+        n = int(digits[0]) if digits else None
+        p = shown[n - 1] if n and 0 < n <= len(shown) else None
+        q = normalise(s.get("quote", ""))
+        ok = bool(p and q and q in p["norm"])
+        checked.append({"text": PMARK.sub(" ", s.get("text", "")).strip(), "quote": s.get("quote", ""), "n": n,
+                        "cite": _cite(p) if p else None, "quote_ok": ok,
+                        "reason": None if ok else ("رقم المقطع غير صحيح" if not p else "الاقتباس غير موجود حرفيًّا في المقطع")})
+    raw = [dict(c) for c in checked]
+
+    if verify:
+        kept = [c for c in checked if c["quote_ok"]]
+        dropped = [c for c in checked if not c["quote_ok"]]
+        if kept:
+            items = "\n\n".join(f"[{i}] الجملة: {c['text']}\nالاقتباس: «{c['quote']}»" for i, c in enumerate(kept))
+            j, st = llm.ask(P.JUDGE_RULES, items, P.SCHEMA_JUDGE, role="judge", provider=provider, max_out=3000)
+            calls.append({"step": "judge", **st})
+            verdicts = {v.get("i"): v for v in (j.get("verdicts") or [])} if isinstance(j, dict) else {}
+            survivors = []
+            for i, c in enumerate(kept):
+                v = verdicts.get(i)
+                if v is not None and not v.get("supported"):
+                    c["reason"] = "الاقتباس لا يدل على الجملة" + (f": {v.get('why')}" if v.get("why") else "")
+                    dropped.append(c)
+                else:
+                    c["judge"] = "supported" if v else "missing"
+                    survivors.append(c)
+            kept = survivors
+    else:
+        kept, dropped = checked, []
+
+    status = ans.get("status", "not_found")
+    if status not in P.STATUS_ENUM:
+        status = "not_found"
+    if not kept:
+        status = "not_found"
+    elif dropped and status == "supported":
+        status = "partial"
+    elif status == "not_found":
+        status = "partial" if dropped else "supported"
+
+    message = None
+    if not kept:
+        message = P.PERSONAL_NOTHING if personal else P.REFUSALS["not_in_library"]
+    elif personal:
+        message = P.PERSONAL_PREFIX
+    elif ans.get("premise_correct") is False:
+        message = P.PREMISE_PREFIX
+
+    passages = [{"n": i, **_cite(p), "text": p["text"], "para": p.get("para")} for i, p in enumerate(shown, 1)]
+    return done(status=status, premise_correct=ans.get("premise_correct"), message=message, sentences=kept, dropped=dropped,
+                raw_sentences=raw, passages=passages, model_status=ans.get("status"))
