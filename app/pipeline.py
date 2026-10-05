@@ -19,7 +19,11 @@ from .textnorm import normalise
 _RET = None
 PMARK = re.compile(r"\s*[\[(]\s*P\d+\s*[\])]\s*")
 # markers of an attributed position: روايتان، وجهان، وعنه، قيل، قال الشيخ، اختار، والصحيح، خالف، الجمهور، المذهب، القول الآخر …
-ATTRIBUTION = re.compile(normalise("روايتان|روايه|وجهان|وعنه|عن احمد|قيل|قال الشيخ|اختار|اختاره|والصحيح|خالف|الجمهور|القول الاخر|قول اخر|القولين|قولان|خلاف|بعض الاصحاب|ذهب"))
+ATTRIBUTION = re.compile("|".join(normalise(w) for w in "روايتان|رواية|وجهان|وعنه|عن أحمد|قيل|قال الشيخ|اختار|اختاره|والصحيح|خالف|الجمهور|القول الآخر|قول آخر|القولين|قولان|خلاف|بعض الأصحاب|ذهب|يرى|المذهب".split("|")))
+# first-person wording: the question is about the asker's own case (a backstop for the scope gate)
+FIRST_PERSON = re.compile("|".join(normalise(w) for w in (
+    "يلزمني|يجزئني|يجزيني|علي أن|هل علي|صلاتي|وضوئي|طهارتي|ثوبي|ثيابي|عندي|لدي|أعيد|اعيد صلاتي|يجوز لي|فهل لي|"
+    "توضأت|صليت|اغتسلت|استنجيت|استجمرت|اشتريت|نسيت|أهدي إلي|اهدي الي|طفلي|ابني|بنتي|زوجتي|بيتي|سيارتي").split("|")))
 
 
 def retriever():
@@ -55,6 +59,8 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
     gate, st = llm.ask(P.SCOPE_RULES, f"السؤال: {question}", P.SCHEMA_SCOPE, role="judge", provider=provider, max_out=800)
     calls.append({"step": "scope", **st})
     scope = gate.get("scope", "answerable") if isinstance(gate, dict) else "answerable"
+    if scope == "answerable" and FIRST_PERSON.search(normalise(question)):
+        scope = "personal_fatwa"
     res["scope"] = scope
 
     def done(**kw):
@@ -77,9 +83,16 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
                     sentences=sents, dropped=[], raw_sentences=sents, passages=[])
 
     shown = retriever().search(question, k=k, para=para)
+    passages = [{"n": i, **_cite(p), "text": p["text"], "para": p.get("para")} for i, p in enumerate(shown, 1)]
     ctx = "\n\n".join(f"[P{i}] {p['book']}، ج{p['vol']} ص{p['page']} ({p['kind']}):\n{p['text']}" for i, p in enumerate(shown, 1))
     system = P.RULES_V2 + (P.GENERAL_MODE if personal else "")
-    ans, st = llm.ask(system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", P.SCHEMA_ANSWER, role="answer", provider=provider)
+    try:
+        ans, st = llm.ask(system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", P.SCHEMA_ANSWER, role="answer", provider=provider)
+    except Exception as e:
+        if "content management policy" not in str(e) and "content_filter" not in str(e):
+            raise
+        return done(status="not_found", message=P.FILTERED, sentences=[], dropped=[], raw_sentences=[], passages=passages,
+                    filtered=True, model_status=None)
     calls.append({"step": "answer", **st})
 
     checked = []
@@ -137,6 +150,5 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
     elif ans.get("premise_correct") is False:
         message = P.PREMISE_PREFIX
 
-    passages = [{"n": i, **_cite(p), "text": p["text"], "para": p.get("para")} for i, p in enumerate(shown, 1)]
     return done(status=status, premise_correct=ans.get("premise_correct"), message=message, sentences=kept, dropped=dropped,
                 raw_sentences=raw, passages=passages, model_status=ans.get("status"))
