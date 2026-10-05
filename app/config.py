@@ -20,7 +20,16 @@ def flag(name, default=True):
 
 # provider: azure (product) | github (free test) | ollama (local, offline fallback)
 LLM_PROVIDER = env("LLM_PROVIDER", "ollama")
-AZURE_OPENAI_ENDPOINT = (env("AZURE_OPENAI_ENDPOINT") or "").rstrip("/")
+
+
+def _openai_host(url):
+    """Accept any endpoint form Azure shows (resource, /openai/v1/, Foundry project URL) and keep the OpenAI host."""
+    import re
+    m = re.match(r"https?://([^/.]+)\.(openai\.azure\.com|services\.ai\.azure\.com|cognitiveservices\.azure\.com)", url or "")
+    return f"https://{m.group(1)}.openai.azure.com" if m else (url or "").rstrip("/")
+
+
+AZURE_OPENAI_ENDPOINT = _openai_host(env("AZURE_OPENAI_ENDPOINT"))
 AZURE_OPENAI_API_KEY = env("AZURE_OPENAI_API_KEY")
 GITHUB_MODELS_TOKEN = env("GITHUB_MODELS_TOKEN")
 OLLAMA_URL = env("OLLAMA_URL", "http://localhost:11434")
