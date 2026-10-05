@@ -20,9 +20,6 @@ SECTIONS = [
      "The same pipeline before the speed comparison below."),
     ("v1_before_fixes", "Before the fixes of 5 Oct night (1 run)",
      "The first full run, kept to show what the fixes in eval/ERRORS.md changed."),
-    ("backup_gemma", "Backup that doesn't depend on one vendor: the whole pipeline on local Gemma 4 E4B",
-     "Same test set; Gemma both answers and judges; search uses the same Azure embeddings."),
-    ("quick_gemma_run1", "Early check: quick set (10 items) on Gemma", "Prep questions; 1 run."),
 ]
 
 

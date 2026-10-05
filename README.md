@@ -61,7 +61,8 @@ question ─► scope gate (mini model) ─► retrieval ─► evidence-first a
 ```
 | Part | What it uses |
 |---|---|
-| Models | Azure OpenAI, set in `.env` and switchable. Gemma 4 E4B via Ollama is the local backup. |
+| Models | Azure OpenAI gpt-5-mini (answers and judge) and text-embedding-3-small, set in `.env` and switchable |
+| Fallback | If the model is unreachable, search-only mode: the cited passages, with no generated answer |
 | Speech | Azure AI Speech |
 | Hosting | Azure App Service |
 
@@ -70,7 +71,7 @@ question ─► scope gate (mini model) ─► retrieval ─► evidence-first a
 make setup                   # venv + dependencies
 python -m scripts.fetch_books  # books from Turath into data/books (slow, once)
 make ingest                  # build data/build/study.json (prints linking stats)
-cp .env.example .env         # fill in keys; LLM_PROVIDER=ollama works offline with Gemma
+cp .env.example .env         # fill in the Azure keys
 make test                    # unit tests (linking, pipeline rules, recitation matching)
 make run                     # http://127.0.0.1:8000
 ```

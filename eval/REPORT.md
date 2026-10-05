@@ -68,33 +68,6 @@ The first full run, kept to show what the fixes in eval/ERRORS.md changed.
 
 Critical items failed in at least one run: full: F08; no_verify: F08; no_retrieval: A24, A38, A50, D12, O12
 
-## Early check: quick set (10 items) on Gemma
-
-Prep questions; 1 run.
-
-**quick_gemma_run1**: 10 items × 1 run · answer model `gemma4:e4b-it-qat` · judge `gemma4:e4b-it-qat` · effort low · embeddings ollama:bge-m3 · commit `bb59e71`
-
-| Metric | full | no_verify | no_retrieval |
-|---|---|---|---|
-| Citation accuracy (gold page ±1), answerable items | 86% | 100% | 0% |
-| Share of cited sentences on a gold page | 86% | 89% | 0% |
-| Correct refusal (out of library) | 100% | 100% | 100% |
-| False refusal (answerable items) | 12% | 0% | 0% |
-| Invented content where refusal expected | 0% | 0% | 0% |
-| Evidence status matches | 70% | 90% | 80% |
-| Disagreement shown (differing items) | 50% | 50% | 0% |
-| False premise caught | 0% | 0% | 0% |
-| Personal fatwa referred | 100% | 100% | 100% |
-| Critical items passed | 50% | 50% | 50% |
-| Shown sentences without verified support | 0% | 0% | 100% |
-| Sentences withheld by verification | 18% | 0% | 0% |
-| Latency median (s) | 32.0 | 32.0 | 21.7 |
-| Latency p95 (s) | 158.0 | 158.0 | 30.7 |
-| Cost per question (USD) | 0.0000 | 0.0000 | 0.0000 |
-| Errors | 0.0 | 0.0 | 0.0 |
-
-Critical items failed in at least one run: full: Q08; no_verify: Q08; no_retrieval: Q08
-
 ## Speed settings compared (30 mixed items, 1 run)
 
 | Setting | Median s | p95 s | Gold page cited | False refusal | Status match | Premise caught | Critical |

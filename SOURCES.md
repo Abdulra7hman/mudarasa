@@ -31,8 +31,9 @@
 | Azure OpenAI **gpt-5-mini** (2025-08-07; retires 9 Feb 2027) | Global Standard, resource in **UAE North**, version pinned ("once the current version expires") | Answers, scope gate, support judge, study tools | Global Standard: Azure may process a request in any region; stored data stays in the resource's geography. In UAE North, chat models are offered only as Global Standard |
 | Azure OpenAI **text-embedding-3-small** (1024 dimensions) | **Standard (regional)**, UAE North | Dense search | Inside UAE North |
 | Azure AI Speech, neural TTS `ar-SA-HamedNeural`; speech to text `ar-SA` | F0 (free), **UAE North** | Recordings for listening, made offline; recitation | Inside UAE North. The browser gets a 10-minute token; the key stays on the server |
-| Gemma 4 E4B (`gemma4:e4b-it-qat`) via Ollama, local | — | Backup that doesn't depend on one vendor, scored in the evaluation | On the machine |
-| BGE-M3 via Ollama, local | — | Embeddings backup (local hybrid search: 99% gold page in the top 8, against 95% for the deployed hybrid; eval/RETRIEVAL.md) | On the machine |
+| BGE-M3 via Ollama, local (comparison only) | — | Measured in the retrieval check (local hybrid search: 99% gold page in the top 8, against 95% for the deployed hybrid; eval/RETRIEVAL.md). Not used by the live site | On the machine |
+
+**Fallback.** If Azure OpenAI is unreachable, the app switches to search-only mode: it shows the cited passages for the question with an explanation, and generates nothing. Switching to another model or provider is one line in `.env`.
 
 **Model choice.**
 - gpt-5.4, gpt-5.4-mini and gpt-5-nano had **no quota** on the new subscription. The quota request is pending.
