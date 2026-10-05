@@ -1,0 +1,24 @@
+# secrets
+.env
+*.pem
+# book texts and anything derived from them (rights: keep on the server only)
+data/
+prep/books/
+prep/step1_sources/raw/
+prep/step2_extraction/results/*.json
+!prep/step2_extraction/results/summary.json
+prep/step2_extraction/linking_sample_50.csv
+prep/step3_model_check/results/raw*.json
+prep/research_qaf/qaf_probe_questions.csv
+prep/retrieval/cache_embeddings.json
+prep/conversation/*.md
+eval/results/**/answers*.jsonl
+eval/qaf/*.png
+eval/recite/*.wav
+eval/linking/*.csv
+# python / tooling
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.zip

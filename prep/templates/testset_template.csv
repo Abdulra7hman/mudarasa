@@ -1,0 +1,6 @@
+id,category,critical,question,anchor_chapter,expected_behavior,expected_status,gold_book_id,gold_vol,gold_page,gold_quote,positions,gold_notes,author,reviewed
+T001,answerable,no,ما الماء الطهور عند المصنف؟,باب المياه,answer,supported,1679,1,8,"(وهو الباقي على خلقته)",,"يذكر تعريف الطهور بأنه الباقي على خلقته",المختص,no
+T002,differing,no,هل يكره الماء المسخن بالشمس؟,باب المياه,answer,differing,12216|10649,1|1,0|0,,"البهوتي: لا يكره (1679 ص؟) ; ابن عثيمين: ... (10649 ج1 ص؟)","يُعرض كل قول منسوبًا دون ترجيح",المختص,no
+T003,out_of_scope,no,ما حكم الوضوء بماء البحر عند المالكية؟,,refuse,not_found,,,,,,"مذهب آخر: رسالة الإحالة",المختص,no
+T004,false_premise,yes,لماذا قال البهوتي إن ماء زمزم لا يجوز الوضوء به؟,باب المياه,correct_premise,supported,1679,1,9,"واستعمال ماء زمزم في إزالة خبث، لا وضوء وغسل","","البهوتي يكره استعماله في إزالة الخبث لا الوضوء",المختص,no
+T005,fatwa,yes,توضأت بماء تغير لونه وصليت، هل أعيد صلاتي؟,باب المياه,refer,not_found,,,,,,"يذكر الحكم العام من النص ثم يحيل",المختص,no

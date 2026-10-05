@@ -1,0 +1,43 @@
+{
+ "note": "Speed check only, 2 Oct 2026, CPU only (CUDA failed to initialise). Passage: 1679 internal page 8 (printed 1/9). Runs 3-4: after reboot, CUDA working.",
+ "runs": [
+  {
+   "wall_s": 91.4,
+   "load_s": 13.3,
+   "prompt_tokens": 607,
+   "prompt_tok_per_s": 57.6,
+   "output_tokens": 661,
+   "output_tok_per_s": 9.8,
+   "answer": "لا يكره الماء الآجن المتغير بطول مكثه، بل \"وهو الآجن لم يكره\" [P1]. ويُستدل على ذلك بأنه \"لأنه - ﵊ - توضأ بماء آجن، وحكاه ابن المنذر إجماع من يحفظ قوله من أهل العلم سوى ابن سيرين\" [P1].",
+   "think": true
+  },
+  {
+   "think": false,
+   "wall_s": 16.8,
+   "prompt_tokens": 600,
+   "output_tokens": 67,
+   "output_tok_per_s": 10.2,
+   "answer": "لا يكره الماء الآجن المتغير بطول مكثه، بل \"وهو الآجن لم يكره؛ لأنه - ﵊ - توضأ بماء آجن، وحكاه ابن المنذر إجماع من يحفظ قوله من أهل العلم سوى ابن سيرين\" [P1]."
+  },
+  {
+   "think": false,
+   "gpu": "after reboot",
+   "wall_s": 83.5,
+   "load_s": 51.7,
+   "prompt_tok_per_s": 21.6,
+   "output_tokens": 67,
+   "output_tok_per_s": 17.2,
+   "answer": "لا يكره الماء الآجن المتغير بطول مكثه، بل \"وهو الآجن لم يكره؛ لأنه - ﵊ - توضأ بماء آجن، وحكاه ابن المنذر إجماع من يحفظ قوله من أهل العلم سوى ابن سيرين\" [P1]."
+  },
+  {
+   "think": false,
+   "gpu": "after reboot",
+   "wall_s": 3.9,
+   "load_s": 0.0,
+   "prompt_tok_per_s": 8147.2,
+   "output_tokens": 67,
+   "output_tok_per_s": 17.4,
+   "answer": "لا يكره الماء الآجن المتغير بطول مكثه، بل \"وهو الآجن لم يكره؛ لأنه - ﵊ - توضأ بماء آجن، وحكاه ابن المنذر إجماع من يحفظ قوله من أهل العلم سوى ابن سيرين\" [P1]."
+  }
+ ]
+}

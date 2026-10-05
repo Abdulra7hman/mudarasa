@@ -1,0 +1,314 @@
+{
+ "rows": [
+  {
+   "id": "Q01",
+   "question": "ما حكم الماء الآجن، وهو المتغير بطول مكثه؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "Q02",
+   "question": "كم مقدار القلتين بالرطل العراقي؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "Q03",
+   "question": "ما حكم الماء إذا سُخِّن بشيء نجس؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 4,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "Q04",
+   "question": "ما درجة حديث «لا تفعلي فإنه يورث البرص» في الماء المسخن بالشمس؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "Q05",
+   "question": "هل ينجس الماء الجاري القليل بمجرد ملاقاة النجاسة إذا لم يتغير؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "Q06",
+   "question": "هل يكره الماء المسخن بطاهر كالحطب؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "Q08",
+   "question": "لماذا قال البهوتي إن ماء زمزم لا يجوز الوضوء به؟",
+   "bm25_step3": 1,
+   "keyword_stem": 1,
+   "dense_bge_m3": 7,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "U1",
+   "question": "ما هو أول باب في الفقه؟",
+   "bm25_step3": null,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "U2",
+   "question": "كم أنواع المياه؟",
+   "bm25_step3": 3,
+   "keyword_stem": 3,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "U3",
+   "question": "ما معنى الطهارة لغةً؟",
+   "bm25_step3": 2,
+   "keyword_stem": 1,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  },
+  {
+   "id": "U4",
+   "question": "ما الفرق بين الطاهر والطهور؟",
+   "bm25_step3": 4,
+   "keyword_stem": 4,
+   "dense_bge_m3": 1,
+   "hybrid": 1,
+   "turath_find": null
+  }
+ ],
+ "turath_raw": {
+  "Q01": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "Q02": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "Q03": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "Q04": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "Q05": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "Q06": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "Q08": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "U1": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "U2": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "U3": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  },
+  "U4": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"code\":\"active_context_limit_exceeded\",\"ok\":false,\"tool\":\"turath_find\",\"warning\":\"Maximum active Turath research contexts reached; reuse an existing research_id.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "structuredContent": {
+     "code": "active_context_limit_exceeded",
+     "ok": false,
+     "tool": "turath_find",
+     "warning": "Maximum active Turath research contexts reached; reuse an existing research_id."
+    }
+   }
+  }
+ }
+}

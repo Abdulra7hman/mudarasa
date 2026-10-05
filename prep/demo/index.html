@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مدارسة: تجربة باب المياه</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--ink:#1d1d1b;--muted:#6b6a65;--line:#e3dfd5;--accent:#1f6f5c;--ok:#1f7a3a;--warn:#a86400;--bad:#a12b2b;--mark:#fde68a;--fs:18px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151614;--card:#1f201d;--ink:#ecebe6;--muted:#a3a29b;--line:#34352f;--accent:#5fc4a8;--ok:#58c27a;--warn:#e0a24a;--bad:#e06b6b;--mark:#6b5a12}}
+:root[data-theme="dark"]{--bg:#151614;--card:#1f201d;--ink:#ecebe6;--muted:#a3a29b;--line:#34352f;--accent:#5fc4a8;--ok:#58c27a;--warn:#e0a24a;--bad:#e06b6b;--mark:#6b5a12}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:16px;line-height:1.7}
+.wrap{max-width:860px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:24px;margin:8px 0}
+.sub{color:var(--muted);font-size:14px;margin:0 0 12px}
+.tools button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:14px}
+.notice{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--muted)}
+.suggest{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.suggest button{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer;font:inherit;font-size:14px}
+.suggest button:hover,.tools button:hover{border-color:var(--accent)}
+form{display:flex;gap:8px}
+textarea{flex:1;min-height:56px;resize:vertical;font:inherit;font-size:17px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+form button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:0 20px;font:inherit;font-weight:600;cursor:pointer}
+form button:disabled{opacity:.5;cursor:wait}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:16px}
+.badge{display:inline-block;border-radius:999px;padding:2px 12px;font-size:14px;font-weight:600;border:1px solid currentColor}
+.s-supported{color:var(--ok)}.s-partial{color:var(--warn)}.s-differing{color:var(--accent)}.s-not_found{color:var(--bad)}
+.book{font-family:Amiri,"Noto Naskh Arabic",serif;font-size:var(--fs);line-height:2}
+.sent{margin:10px 0}
+.chip{display:inline-block;margin-inline-start:6px;font-family:"IBM Plex Sans Arabic",sans-serif;font-size:13px;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:0 6px;cursor:pointer}
+.meta{color:var(--muted);font-size:13px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--muted);font-size:14px}
+.passage{border-top:1px solid var(--line);padding:10px 0}.passage.focus{background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:8px;padding:10px}
+.passage h4{margin:0 0 4px;font-size:14px;font-weight:600}
+.passage a{color:var(--accent);font-size:13px}
+mark{background:var(--mark);color:inherit;border-radius:3px}
+.dropped{color:var(--bad);font-size:14px}
+.spin{color:var(--muted)}
+.foot{margin:24px 0;color:var(--muted);font-size:13px}
+@media (max-width:600px){form{flex-direction:column}form button{padding:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>مدارسة</h1><p class="sub">تجربة أولية: باب المياه من «الروض المربع» وثلاثة كتب مرتبطة به</p></div>
+  <div class="tools" role="group" aria-label="إعدادات العرض">
+    <button id="fsDown" title="تصغير الخط">أ−</button><button id="fsUp" title="تكبير الخط">أ+</button>
+    <button id="tashkeel" aria-pressed="true">التشكيل: ظاهر</button><button id="theme">الوضع الليلي</button>
+  </div>
+</header>
+<div class="notice">مدارسة أداة مدعومة بالذكاء الاصطناعي، وليست عالمًا ولا مفتيًا. كل جملة تُعرض هنا لها اقتباس حرفي تحققنا من وجوده في الصفحة المذكورة؛ <b>ولم يُضف بعدُ فحصُ أن الاقتباس يؤيد الجملة</b>، فراجع النص بنفسك. النموذج: Gemma 4 E4B محليًّا؛ قد يستغرق الجواب ٢٠–٦٠ ثانية.</div>
+
+<div class="suggest" aria-label="أسئلة مقترحة">
+  <button>ما حكم الماء الآجن، وهو المتغير بطول مكثه؟</button>
+  <button>ما درجة حديث «لا تفعلي فإنه يورث البرص» في الماء المسخن بالشمس؟</button>
+  <button>هل ينجس الماء الجاري القليل بمجرد ملاقاة النجاسة إذا لم يتغير؟</button>
+  <button>ما حكم الماء المستعمل في رفع الحدث عند المالكية؟</button>
+</div>
+
+<form id="f"><textarea id="q" placeholder="اكتب سؤالك عن باب المياه…" aria-label="السؤال"></textarea><button id="go">اسأل</button></form>
+<div id="out" aria-live="polite"></div>
+<p class="foot">النصوص من تراث (app.turath.io)، وأرقام الصفحات موافقة للمطبوع. نسخة تجريبية قبل أيام البناء، ٢ أكتوبر ٢٠٢٦.</p>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), out=$("#out");
+const TASH=/[ؐ-ًؚ-ٰٟۖ-ۭ]/g;
+const TASH1=new RegExp(TASH.source);
+let showTashkeel=true, fs=18, last=null;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const view=s=>showTashkeel?s:String(s??"").replace(TASH,"");
+// highlight the quote inside the passage, ignoring tashkeel differences
+function highlight(text,quote){
+  const t=view(text); if(!quote) return esc(t);
+  const strip=s=>s.replace(TASH,"").replace(/ـ/g,"");
+  const map=[];let plain="";
+  for(let i=0;i<t.length;i++){const c=t[i];if(!TASH1.test(c)&&c!=="ـ"){map.push(i);plain+=c}}
+  const q=strip(quote).trim().replace(/^[«"(]+|[»")]+$/g,"").trim(); const k=plain.indexOf(q);
+  if(k<0||!q) return esc(t);
+  const a=map[k]; let b=map[k+q.length-1]+1; while(b<t.length&&(TASH1.test(t[b])||t[b]==="ـ")) b++;
+  return esc(t.slice(0,a))+"<mark>"+esc(t.slice(a,b))+"</mark>"+esc(t.slice(b));
+}
+function render(r){
+  last=r;
+  if(r.error){out.innerHTML=`<div class="card dropped">خطأ: ${esc(r.error)}</div>`;return}
+  let h=`<div class="card"><span class="badge s-${r.status}">${esc(r.status_ar)}</span> <span class="meta">${r.seconds} ثانية</span>`;
+  if(r.premise_correct===false&&r.sentences.length) h+=`<p class="meta">تنبيه: في السؤال نسبة لم يجدها النظام في النص.</p>`;
+  if(r.message) h+=`<p>${esc(r.message)}</p>`;
+  const quoteFor={};
+  for(const s of r.sentences){
+    (quoteFor[s.p]=quoteFor[s.p]||[]).push(s.quote);
+    const p=r.passages[s.p-1];
+    h+=`<p class="sent">${esc(view(s.text))}<button class="chip" data-p="${s.p}" title="افتح المقطع">${esc(p.book)}، ج${p.vol} ص${p.page}</button></p>`;
+  }
+  if(r.dropped.length){
+    h+=`<details><summary>حُذف ${r.dropped.length} من الجمل لأن التوثيق لم يثبت</summary>`;
+    for(const d of r.dropped) h+=`<p class="dropped">✕ ${esc(view(d.text))} <span class="meta">(${esc(d.reason)})</span></p>`;
+    h+=`</details>`;
+  }
+  if(r.passages.length){
+    h+=`<details id="ps"${r.sentences.length?"":" open"}><summary>المقاطع التي قرأها النموذج (${r.passages.length})</summary>`;
+    for(const p of r.passages){
+      const q=(quoteFor[p.n]||[])[0];
+      h+=`<div class="passage" id="p${p.n}"><h4>[${p.n}] ${esc(p.book)}، ج${p.vol} ص${p.page} · ${p.kind==="text"?"متن وشرح":esc(p.kind)} · <a href="${p.link}" target="_blank" rel="noopener">افتح الصفحة في تراث</a></h4><div class="book">${highlight(p.text,q)}</div></div>`;
+    }
+    h+=`</details>`;
+  }
+  out.innerHTML=h+`</div>`;
+  out.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+    $("#ps").open=true; document.querySelectorAll(".passage").forEach(x=>x.classList.remove("focus"));
+    const el=$("#p"+b.dataset.p); el.classList.add("focus"); el.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+}
+async function ask(q){
+  if(!q.trim()) return;
+  $("#go").disabled=true; let t=0;
+  out.innerHTML=`<div class="card spin" id="sp">يبحث في الكتب ويكتب الجواب… 0 ث</div>`;
+  const timer=setInterval(()=>{t++;const sp=$("#sp");if(sp)sp.textContent=`يبحث في الكتب ويكتب الجواب… ${t} ث`},1000);
+  try{const r=await fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q})});render(await r.json())}
+  catch(e){render({error:String(e)})}
+  finally{clearInterval(timer);$("#go").disabled=false}
+}
+$("#f").onsubmit=e=>{e.preventDefault();ask($("#q").value)};
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();ask($("#q").value)}});
+document.querySelectorAll(".suggest button").forEach(b=>b.onclick=()=>{$("#q").value=b.textContent;ask(b.textContent)});
+$("#fsUp").onclick=()=>{fs=Math.min(30,fs+2);document.documentElement.style.setProperty("--fs",fs+"px")};
+$("#fsDown").onclick=()=>{fs=Math.max(14,fs-2);document.documentElement.style.setProperty("--fs",fs+"px")};
+$("#tashkeel").onclick=e=>{showTashkeel=!showTashkeel;e.target.textContent="التشكيل: "+(showTashkeel?"ظاهر":"مخفي");e.target.setAttribute("aria-pressed",showTashkeel);if(last)render(last)};
+$("#theme").onclick=()=>{const d=document.documentElement;const dark=d.dataset.theme==="dark"||(!d.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches);d.dataset.theme=dark?"light":"dark"};
+</script>
+</body>
+</html>
