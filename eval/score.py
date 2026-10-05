@@ -65,7 +65,7 @@ def score_item(item, r, system):
         "citation_hit": hit if not expect_refusal else None,
         "cited_on_gold_share": (sum(page_hit(b, p, gold) for b, p in c) / len(c)) if (c and gold) else None,
         "sentences": len(shown), "dropped": len(r.get("dropped", [])) if system != "no_verify" else 0,
-        "unverified_shown": (sum(1 for s in shown if not s.get("quote_ok")) if system == "no_verify" else
+        "unverified_shown": (sum(1 for s in shown if not s.get("quote_ok") or s.get("judge_ok") is False) if system == "no_verify" else
                              (len(shown) if closed else 0)),
         "differing_shown": (status == "differing") if cat == "differing" else None,
         "premise_caught": (r.get("premise_correct") is False) if item.get("premise_false") else None,

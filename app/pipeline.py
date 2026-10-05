@@ -78,7 +78,7 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
         p = shown[n - 1] if n and 0 < n <= len(shown) else None
         q = normalise(s.get("quote", ""))
         ok = bool(p and q and q in p["norm"])
-        checked.append({"text": PMARK.sub(" ", s.get("text", "")).strip(), "quote": s.get("quote", ""), "n": n,
+        checked.append({"k": len(checked), "text": PMARK.sub(" ", s.get("text", "")).strip(), "quote": s.get("quote", ""), "n": n,
                         "cite": _cite(p) if p else None, "quote_ok": ok,
                         "reason": None if ok else ("رقم المقطع غير صحيح" if not p else "الاقتباس غير موجود حرفيًّا في المقطع")})
     raw = [dict(c) for c in checked]
@@ -96,6 +96,7 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
                 v = verdicts.get(i)
                 if v is not None and not v.get("supported"):
                     c["reason"] = "الاقتباس لا يدل على الجملة" + (f": {v.get('why')}" if v.get("why") else "")
+                    raw[c["k"]]["judge_ok"] = False  # so the no-verification baseline counts it as unsupported
                     dropped.append(c)
                 else:
                     c["judge"] = "supported" if v else "missing"
