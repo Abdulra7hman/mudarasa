@@ -1,0 +1,318 @@
+{
+ "meta": {
+  "tag": "main_v2_gpt5mini",
+  "set": "eval/testset.jsonl",
+  "items": 100,
+  "systems": "full,no_retrieval",
+  "runs": 3,
+  "provider": "azure",
+  "answer_model": "gpt-5-mini",
+  "judge_model": "gpt-5-mini",
+  "effort_answer": "medium",
+  "effort_judge": "medium",
+  "embed": "azure:text-embedding-3-small",
+  "commit": "f447b7c",
+  "started": "2026-10-05T23:15:18",
+  "prices": {
+   "gpt-5": [
+    1.25,
+    10.0
+   ],
+   "gpt-5-mini": [
+    0.25,
+    2.0
+   ],
+   "gpt-5-nano": [
+    0.05,
+    0.4
+   ],
+   "openai/gpt-5": [
+    1.25,
+    10.0
+   ],
+   "openai/gpt-5-mini": [
+    0.25,
+    2.0
+   ],
+   "text-embedding-3-large": [
+    0.13,
+    0.0
+   ],
+   "text-embedding-3-small": [
+    0.02,
+    0.0
+   ]
+  },
+  "finished": "2026-10-06T00:03:22"
+ },
+ "systems": {
+  "full": {
+   "runs": 3,
+   "n": 100,
+   "citation_hit": {
+    "mean": 0.895582329317269,
+    "min": 0.8795180722891566,
+    "max": 0.9156626506024096
+   },
+   "cited_on_gold_share": {
+    "mean": 0.7801311728395061,
+    "min": 0.7677083333333332,
+    "max": 0.7874999999999999
+   },
+   "correct_refusal": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "false_refusal": {
+    "mean": 0.032128514056224904,
+    "min": 0.024096385542168676,
+    "max": 0.03614457831325301
+   },
+   "invented_on_refusal": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "status_ok": {
+    "mean": 0.6433333333333333,
+    "min": 0.59,
+    "max": 0.69
+   },
+   "differing_shown": {
+    "mean": 0.6222222222222222,
+    "min": 0.6,
+    "max": 0.6666666666666666
+   },
+   "premise_caught": {
+    "mean": 0.7333333333333334,
+    "min": 0.7,
+    "max": 0.8
+   },
+   "referral": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "critical_pass": {
+    "mean": 0.9,
+    "min": 0.9,
+    "max": 0.9
+   },
+   "unverified_shown_share": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "dropped_share": {
+    "mean": 0.09701251964178904,
+    "min": 0.08487084870848709,
+    "max": 0.11627906976744186
+   },
+   "latency_median_s": {
+    "mean": 34.916666666666664,
+    "min": 34.25,
+    "max": 35.25
+   },
+   "latency_p95_s": {
+    "mean": 48.46666666666666,
+    "min": 47.2,
+    "max": 50.3
+   },
+   "cost_per_question_usd": {
+    "mean": 0.007752719999999998,
+    "min": 0.0077151300000000015,
+    "max": 0.007826049999999998
+   },
+   "errors": {
+    "mean": 0.0,
+    "min": 0,
+    "max": 0
+   },
+   "crit_failed": [
+    "F08"
+   ]
+  },
+  "no_retrieval": {
+   "runs": 3,
+   "n": 100,
+   "citation_hit": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "cited_on_gold_share": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "correct_refusal": {
+    "mean": 0.6666666666666666,
+    "min": 0.6470588235294118,
+    "max": 0.7058823529411765
+   },
+   "false_refusal": {
+    "mean": 0.12048192771084337,
+    "min": 0.10843373493975904,
+    "max": 0.13253012048192772
+   },
+   "invented_on_refusal": {
+    "mean": 0.24444444444444446,
+    "min": 0.2,
+    "max": 0.26666666666666666
+   },
+   "status_ok": {
+    "mean": 0.3833333333333333,
+    "min": 0.37,
+    "max": 0.4
+   },
+   "differing_shown": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "premise_caught": {
+    "mean": 0.6333333333333333,
+    "min": 0.6,
+    "max": 0.7
+   },
+   "referral": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "critical_pass": {
+    "mean": 0.3666666666666667,
+    "min": 0.3,
+    "max": 0.4
+   },
+   "unverified_shown_share": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "dropped_share": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "latency_median_s": {
+    "mean": 19.88333333333333,
+    "min": 19.799999999999997,
+    "max": 19.95
+   },
+   "latency_p95_s": {
+    "mean": 84.0,
+    "min": 28.5,
+    "max": 194.4
+   },
+   "cost_per_question_usd": {
+    "mean": 0.004526216666666666,
+    "min": 0.004388809999999998,
+    "max": 0.00469246
+   },
+   "errors": {
+    "mean": 0.0,
+    "min": 0,
+    "max": 0
+   },
+   "crit_failed": [
+    "A24",
+    "A38",
+    "A50",
+    "D12",
+    "F02",
+    "F05",
+    "F08",
+    "O12"
+   ]
+  },
+  "no_verify": {
+   "runs": 3,
+   "n": 100,
+   "citation_hit": {
+    "mean": 0.9036144578313253,
+    "min": 0.891566265060241,
+    "max": 0.9156626506024096
+   },
+   "cited_on_gold_share": {
+    "mean": 0.7805229766803841,
+    "min": 0.7777777777777778,
+    "max": 0.7837499999999998
+   },
+   "correct_refusal": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "false_refusal": {
+    "mean": 0.028112449799196786,
+    "min": 0.024096385542168676,
+    "max": 0.03614457831325301
+   },
+   "invented_on_refusal": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "status_ok": {
+    "mean": 0.7333333333333334,
+    "min": 0.71,
+    "max": 0.75
+   },
+   "differing_shown": {
+    "mean": 0.6888888888888888,
+    "min": 0.6666666666666666,
+    "max": 0.7333333333333333
+   },
+   "premise_caught": {
+    "mean": 0.7333333333333334,
+    "min": 0.7,
+    "max": 0.8
+   },
+   "referral": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "critical_pass": {
+    "mean": 0.9,
+    "min": 0.9,
+    "max": 0.9
+   },
+   "unverified_shown_share": {
+    "mean": 0.09701251964178904,
+    "min": 0.08487084870848709,
+    "max": 0.11627906976744186
+   },
+   "dropped_share": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "latency_median_s": {
+    "mean": 34.916666666666664,
+    "min": 34.25,
+    "max": 35.25
+   },
+   "latency_p95_s": {
+    "mean": 48.46666666666666,
+    "min": 47.2,
+    "max": 50.3
+   },
+   "cost_per_question_usd": {
+    "mean": 0.007752719999999998,
+    "min": 0.0077151300000000015,
+    "max": 0.007826049999999998
+   },
+   "errors": {
+    "mean": 0.0,
+    "min": 0,
+    "max": 0
+   },
+   "crit_failed": [
+    "F08"
+   ]
+  }
+ }
+}

@@ -14,11 +14,38 @@ Reproduce: `make eval RUNS=3` (needs `.env`), then `python -m eval.make_report`.
 
 10 items are critical. Scoring: page ±1, refusal and referral detection, evidence status, verified-sentence share, latency, tokens, cost (`eval/score.py`).
 
+## Main result: Mudarasa (Azure gpt-5-mini) vs the same model without retrieval
+
+`full` = the whole pipeline. `no_verify` = the same answers before the quote check and the judge (no extra calls). `no_retrieval` = the same model with no library, citing from memory. 100 items × 3 runs; mean (min–max over runs).
+
+**main_v2_gpt5mini**: 100 items × 3 runs · answer model `gpt-5-mini` · judge `gpt-5-mini` · effort medium · embeddings azure:text-embedding-3-small · commit `f447b7c`
+
+| Metric | full | no_verify | no_retrieval |
+|---|---|---|---|
+| Citation accuracy (gold page ±1), answerable items | 90% (88%–92%) | 90% (89%–92%) | 0% |
+| Share of cited sentences on a gold page | 78% (77%–79%) | 78% (78%–78%) | 0% |
+| Correct refusal (out of library) | 100% | 100% | 67% (65%–71%) |
+| False refusal (answerable items) | 3% (2%–4%) | 3% (2%–4%) | 12% (11%–13%) |
+| Invented content where refusal expected | 0% | 0% | 24% (20%–27%) |
+| Evidence status matches | 64% (59%–69%) | 73% (71%–75%) | 38% (37%–40%) |
+| Disagreement shown (differing items) | 62% (60%–67%) | 69% (67%–73%) | 0% |
+| False premise caught | 73% (70%–80%) | 73% (70%–80%) | 63% (60%–70%) |
+| Personal fatwa referred | 100% | 100% | 100% |
+| Critical items passed | 90% | 90% | 37% (30%–40%) |
+| Shown sentences without verified support | 0% | 10% (8%–12%) | 100% |
+| Sentences withheld by verification | 10% (8%–12%) | 0% | 0% |
+| Latency median (s) | 34.9 (34.2–35.2) | 34.9 (34.2–35.2) | 19.9 (19.8–19.9) |
+| Latency p95 (s) | 48.5 (47.2–50.3) | 48.5 (47.2–50.3) | 84.0 (28.5–194.4) |
+| Cost per question (USD) | 0.0078 | 0.0078 | 0.0045 |
+| Errors | 0.0 | 0.0 | 0.0 |
+
+Critical items failed in at least one run: full: F08; no_verify: F08; no_retrieval: A24, A38, A50, D12, F02, F05, F08, O12
+
 ## Before the fixes of 5 Oct night (1 run)
 
 The first full run, kept to show what the fixes in eval/ERRORS.md changed.
 
-**main_gpt5mini**: 100 items × 3 runs · answer model `gpt-5-mini` · judge `gpt-5-mini` · effort medium · embeddings azure:text-embedding-3-small · commit `38b7f4c`
+**v1_before_fixes**: 100 items × 1 run · answer model `gpt-5-mini` · judge `gpt-5-mini` · effort medium · embeddings azure:text-embedding-3-small · commit `38b7f4c`
 
 | Metric | full | no_verify | no_retrieval |
 |---|---|---|---|
@@ -45,7 +72,7 @@ Critical items failed in at least one run: full: F08; no_verify: F08; no_retriev
 
 Prep questions; 1 run.
 
-**quick_gemma_run1**: 10 items × 1 runs · answer model `gemma4:e4b-it-qat` · judge `gemma4:e4b-it-qat` · effort low · embeddings ollama:bge-m3 · commit `bb59e71`
+**quick_gemma_run1**: 10 items × 1 run · answer model `gemma4:e4b-it-qat` · judge `gemma4:e4b-it-qat` · effort low · embeddings ollama:bge-m3 · commit `bb59e71`
 
 | Metric | full | no_verify | no_retrieval |
 |---|---|---|---|
@@ -122,6 +149,10 @@ Every grading shown is a phrase copied from the note itself (highlighted inside 
 ## Recitation
 No recorded clips yet (eval/recite/*.wav).
 
+
+## Errors and fixes
+
+See [ERRORS.md](ERRORS.md): failure → cause → fixing commit.
 
 ## Limits
 
