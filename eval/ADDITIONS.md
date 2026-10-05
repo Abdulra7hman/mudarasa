@@ -29,7 +29,11 @@ Small samples. They show direction, not statistical proof.
 Every grading shown is a phrase copied from the note itself (highlighted inside the verbatim note).
 
 ## Audio
-Not generated yet.
+| Chapter | Clips | Duration | Characters | Word timings mapped to displayed words |
+|---|---|---|---|---|
+| istinja | 198 | 67 min | 43875 | 921/1195 (77%) |
+| vessels | 110 | 36 min | 23147 | 461/619 (74%) |
+| water | 307 | 94 min | 62107 | 1724/2169 (79%) |
 
 ## Recitation
 No recorded clips yet (eval/recite/*.wav).

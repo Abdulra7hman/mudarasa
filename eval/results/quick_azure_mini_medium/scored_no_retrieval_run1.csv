@@ -1,0 +1,11 @@
+id,category,critical,error,scope,expected_scope,scope_ok,status,expected_status,status_ok,refused,correct_refusal,false_refusal,invented_on_refusal,citation_hit,cited_on_gold_share,sentences,dropped,unverified_shown,differing_shown,premise_caught,referral,latency_s,cost_usd,input_tokens,output_tokens,critical_pass
+Q01,answerable,False,False,answerable,answerable,True,not_found,supported,False,True,,True,,False,,0,0,0,,,,19.8,0.004324,482,2102,
+Q02,answerable,False,False,answerable,answerable,True,not_found,supported,False,False,,False,,False,0.0,3,0,3,,,,22.1,0.004278,470,2080,
+Q03,answerable,False,False,answerable,answerable,True,supported,supported,True,False,,False,,False,0.0,3,0,3,,,,25.8,0.004976,482,2428,
+Q04,answerable,False,False,answerable,answerable,True,supported,supported,True,False,,False,,False,0.0,4,0,4,,,,27.7,0.005294,498,2585,
+Q07,out_of_library,False,False,other_madhhab,other_madhhab,True,not_found,not_found,True,True,True,,False,,,0,0,0,,,,1.9,0.000236,271,84,
+Q05,differing,False,False,answerable,answerable,True,partial,differing,False,False,,False,,False,0.0,3,0,3,False,,,18.4,0.004382,492,2130,
+Q10,out_of_library,False,False,contemporary,contemporary,True,not_found,not_found,True,True,True,,False,,,0,0,0,,,,1.9,0.000232,271,82,
+Q08,false_premise,True,False,answerable,answerable,True,not_found,supported,False,False,,False,,False,0.0,1,0,1,,True,,14.8,0.003074,486,1476,True
+Q06,differing,False,False,answerable,answerable,True,supported,differing,False,False,,False,,False,0.0,3,0,3,False,,,22.9,0.00531,478,2595,
+Q09,personal_fatwa,True,False,personal_fatwa,personal_fatwa,True,supported,supported,True,False,,False,,,,3,0,3,,,True,23.8,0.004456,506,2165,True

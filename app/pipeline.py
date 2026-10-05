@@ -18,6 +18,8 @@ from .textnorm import normalise
 
 _RET = None
 PMARK = re.compile(r"\s*[\[(]\s*P\d+\s*[\])]\s*")
+# markers of an attributed position: روايتان، وجهان، وعنه، قيل، قال الشيخ، اختار، والصحيح، خالف، الجمهور، المذهب، القول الآخر …
+ATTRIBUTION = re.compile(normalise("روايتان|روايه|وجهان|وجه|وعنه|عن احمد|قيل|قال الشيخ|اختار|اختاره|والصحيح|الصحيح|خالف|الجمهور|المذهب|القول الاخر|قول اخر|القولين|قولان|خلاف|الاصحاب|عند|يري"))
 
 
 def retriever():
@@ -26,6 +28,15 @@ def retriever():
         from .retrieval import Retriever
         _RET = Retriever()
     return _RET
+
+
+def context(p, quote, width=220):
+    """The passage text around the quote, so the judge sees which term or issue the quote is about."""
+    text, q = p["text"], (quote or "").strip()
+    i = text.find(q[:30]) if q else -1
+    if i < 0:  # tashkeel or spacing differs: fall back to the passage start
+        return text[: 2 * width]
+    return text[max(0, i - width): i + len(q) + width]
 
 
 def _cite(p):
@@ -87,8 +98,9 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
         kept = [c for c in checked if c["quote_ok"]]
         dropped = [c for c in checked if not c["quote_ok"]]
         if kept:
-            items = "\n\n".join(f"[{i}] الجملة: {c['text']}\nالاقتباس: «{c['quote']}»" for i, c in enumerate(kept))
-            j, st = llm.ask(P.JUDGE_RULES, items, P.SCHEMA_JUDGE, role="judge", provider=provider, max_out=3000)
+            items = "\n\n".join(f"[{i}] الجملة: {c['text']}\nالاقتباس: «{c['quote']}»\nالسياق ({c['cite']['book']}): …{context(shown[c['n'] - 1], c['quote'])}…"
+                                  for i, c in enumerate(kept))
+            j, st = llm.ask(P.JUDGE_RULES, f"سؤال الطالب: {question}\n\n{items}", P.SCHEMA_JUDGE, role="judge", provider=provider, max_out=8000)
             calls.append({"step": "judge", **st})
             verdicts = {v.get("i"): v for v in (j.get("verdicts") or [])} if isinstance(j, dict) else {}
             survivors = []
@@ -108,6 +120,8 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=8)
     status = ans.get("status", "not_found")
     if status not in P.STATUS_ENUM:
         status = "not_found"
+    if status == "differing" and not any(ATTRIBUTION.search(normalise(c["text"] + " " + c["quote"])) for c in kept):
+        status = "supported"  # «أقوال مختلفة» needs a kept sentence that names who holds a position
     if not kept:
         status = "not_found"
     elif dropped and status == "supported":

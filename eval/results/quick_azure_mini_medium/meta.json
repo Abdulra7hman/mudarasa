@@ -1,0 +1,46 @@
+{
+ "tag": "quick_azure_mini_medium",
+ "set": "eval/quick.jsonl",
+ "items": 10,
+ "systems": "full,no_retrieval",
+ "runs": 1,
+ "provider": "azure",
+ "answer_model": "gpt-5-mini",
+ "judge_model": "gpt-5-mini",
+ "effort_answer": "medium",
+ "effort_judge": "low",
+ "embed": "azure:text-embedding-3-small",
+ "commit": "55b5daf",
+ "started": "2026-10-05T22:46:14",
+ "prices": {
+  "gpt-5": [
+   1.25,
+   10.0
+  ],
+  "gpt-5-mini": [
+   0.25,
+   2.0
+  ],
+  "gpt-5-nano": [
+   0.05,
+   0.4
+  ],
+  "openai/gpt-5": [
+   1.25,
+   10.0
+  ],
+  "openai/gpt-5-mini": [
+   0.25,
+   2.0
+  ],
+  "text-embedding-3-large": [
+   0.13,
+   0.0
+  ],
+  "text-embedding-3-small": [
+   0.02,
+   0.0
+  ]
+ },
+ "finished": "2026-10-05T22:48:26"
+}

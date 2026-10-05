@@ -56,9 +56,22 @@ def _p(bid, pg, text, para, chapter, kind=None, extra=None):
 
 def build_passages(study):
     out = []
+    units_by_para = {}
+    for u in study["units"].values():
+        units_by_para.setdefault(u["para"], []).append(u)
     for pid, p in study["paras"].items():
         ch = p["chapter"]
-        out.append(_p(1679, p["pg"], p["text"], pid, ch))
+        # the Rawd, unit by unit (a matn phrase and its explanation): long paragraphs hide specific issues from search
+        buf, pg0 = "", None
+        for u in units_by_para.get(pid, []):
+            buf, pg0 = (buf + " " + u["text"].strip()).strip(), pg0 or u["pg"]
+            if len(normalise(buf)) > 120:
+                out.append(_p(1679, pg0, buf, pid, ch))
+                buf, pg0 = "", None
+        if buf:
+            out.append(_p(1679, pg0, buf, pid, ch))
+        if pid not in units_by_para:
+            out.append(_p(1679, p["pg"], p["text"], pid, ch))
         for n in p["iq"]:
             if len(normalise(n["text"])) > 20:
                 out.append(_p(12216, n["pg"], n["text"], pid, ch, extra={"note": n["n"]}))
@@ -183,14 +196,25 @@ class Retriever:
         elif mode == "dense":
             order = self.dense_rank(q)
         else:
+            kw, dn = self.keyword_rank(q), self.dense_rank(q)
             fused = Counter()
-            for ranking in (self.keyword_rank(q), self.dense_rank(q)):
+            for ranking in (kw, dn):
                 for r, i in enumerate(ranking[:100]):
                     fused[i] += 1 / (RRF_K + r + 1)
+            # a strong match on a rare word (e.g. «زمزم») must not be diluted by passages that are only fair in both lists:
+            # the top 3 keyword and top 2 dense results keep a guaranteed place, the fusion fills the rest
+            sure = list(dict.fromkeys(kw[:3] + dn[:2]))
             order = [i for i, _ in fused.most_common()]
         if chapter:
             order = [i for i in order if self.passages[i]["chapter"] in (chapter, None)]
         if para:  # the open paragraph's own text and commentary first
             own = [i for i in order if self.passages[i]["para"] == para][:4]
             order = own + [i for i in order if i not in own]
-        return [self.passages[i] for i in order[:k]]
+        top = order[:k]
+        if mode == "hybrid":  # keep the fused order, but make sure the strongest single-list hits are inside the top k
+            for i in sure:
+                if i not in top:
+                    drop = next((j for j in reversed(top) if j not in sure), None)
+                    if drop is not None:
+                        top[top.index(drop)] = i
+        return [self.passages[i] for i in top]

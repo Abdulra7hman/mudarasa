@@ -1,0 +1,11 @@
+id,category,critical,error,scope,expected_scope,scope_ok,status,expected_status,status_ok,refused,correct_refusal,false_refusal,invented_on_refusal,citation_hit,cited_on_gold_share,sentences,dropped,unverified_shown,differing_shown,premise_caught,referral,latency_s,cost_usd,input_tokens,output_tokens,critical_pass
+Q03,answerable,False,False,answerable,answerable,True,differing,supported,False,False,,False,,True,0.3333333333333333,3,0,0,,,,31.4,0.007127,2533,3247,
+Q04,answerable,False,False,answerable,answerable,True,differing,supported,False,False,,False,,True,1.0,3,0,0,,,,35.9,0.008502,3031,3872,
+Q01,answerable,False,False,answerable,answerable,True,supported,supported,True,False,,False,,True,0.75,4,0,0,,,,35.9,0.008568,3294,3872,
+Q02,answerable,False,False,answerable,answerable,True,differing,supported,False,False,,False,,True,0.75,4,0,0,,,,35.9,0.009132,3189,4167,
+Q07,out_of_library,False,False,other_madhhab,other_madhhab,True,not_found,not_found,True,True,True,,False,,,0,0,0,,,,1.6,0.000108,271,20,
+Q06,differing,False,False,answerable,answerable,True,supported,differing,False,False,,False,,True,0.6666666666666666,3,0,0,False,,,28.1,0.00642,3272,2801,
+Q10,out_of_library,False,False,contemporary,contemporary,True,not_found,not_found,True,True,True,,False,,,0,0,0,,,,1.7,0.000104,271,18,
+Q05,differing,False,False,answerable,answerable,True,not_found,differing,False,True,,True,,False,,0,0,0,False,,,42.3,0.012858,2779,6082,
+Q08,false_premise,True,False,answerable,answerable,True,differing,supported,False,False,,False,,False,0.0,2,2,0,,True,,37.8,0.010545,4342,4730,True
+Q09,personal_fatwa,True,False,personal_fatwa,personal_fatwa,True,differing,supported,False,False,,False,,,,5,0,0,,,True,42.4,0.011675,3774,5366,True

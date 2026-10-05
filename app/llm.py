@@ -101,7 +101,7 @@ def _ollama_ask(system, user, schema):
                  "cost_usd": 0.0}
 
 
-def ask(system, user, schema, role="answer", provider=None, model=None, effort=None, max_out=6000):
+def ask(system, user, schema, role="answer", provider=None, model=None, effort=None, max_out=16000):
     """Returns (answer dict, stats). Falls back to the second deployment if the first fails (azure only)."""
     provider = provider or C.LLM_PROVIDER
     if provider == "ollama":
