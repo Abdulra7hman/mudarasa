@@ -1,0 +1,32 @@
+{
+ "approved_by": null,
+ "date": null,
+ "note": "Specialist approval pending; ☐ in prep/books/CATALOG.md",
+ "books": [
+  {
+   "id": 1679,
+   "role": "anchor",
+   "approved": false
+  },
+  {
+   "id": 147658,
+   "role": "edition",
+   "approved": false
+  },
+  {
+   "id": 12216,
+   "role": "hashiya",
+   "approved": false
+  },
+  {
+   "id": 10649,
+   "role": "commentary",
+   "approved": false
+  },
+  {
+   "id": 12145,
+   "role": "language (not loaded yet)",
+   "approved": false
+  }
+ ]
+}
