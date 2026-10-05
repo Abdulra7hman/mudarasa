@@ -42,7 +42,7 @@ SPEECH_REGION = env("SPEECH_REGION")
 
 FEATURES = {k: flag("FEATURE_" + k.upper(), True) for k in
             ("audio", "study_tools", "recite", "word", "takhrij", "srs", "notebook")}
-DAILY_QUESTION_CAP = int(env("DAILY_QUESTION_CAP", "2000"))
+DAILY_QUESTION_CAP = int(env("DAILY_QUESTION_CAP", "300"))
 PER_IP_PER_MINUTE = int(env("PER_IP_PER_MINUTE", "6"))
 
 # USD per 1M tokens (input, output). Reasoning tokens bill as output. Unknown models report tokens only.
