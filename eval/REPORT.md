@@ -14,6 +14,33 @@ Reproduce: `make eval RUNS=3` (needs `.env`), then `python -m eval.make_report`.
 
 10 items are critical. Scoring: page ±1, refusal and referral detection, evidence status, verified-sentence share, latency, tokens, cost (`eval/score.py`).
 
+## Main result: Mudarasa as deployed (Azure gpt-5-mini) vs the same model without retrieval
+
+`full` = the whole pipeline with the live settings (single-pass answers, medium answer effort, low judge effort, 12 passages). `no_verify` = the same answers before the quote check and the judge (no extra calls). `no_retrieval` = the same model with no library, citing from memory. 100 items × 3 runs; mean (min–max over runs).
+
+**main_v3_live**: 100 items × 3 runs · answer model `gpt-5-mini` · judge `gpt-5-mini` · effort medium · embeddings azure:text-embedding-3-small · commit `9bcfd8a`
+
+| Metric | full | no_verify | no_retrieval |
+|---|---|---|---|
+| Citation accuracy (gold page ±1), answerable items | 90% (88%–92%) | 92% (92%–93%) | 0% |
+| Share of cited sentences on a gold page | 77% (75%–78%) | 77% (76%–78%) | 0% |
+| Correct refusal (out of library) | 98% (94%–100%) | 98% (94%–100%) | 67% (65%–71%) |
+| False refusal (answerable items) | 4% (4%–6%) | 4% (2%–5%) | 15% (12%–20%) |
+| Invented content where refusal expected | 2% (0%–7%) | 2% (0%–7%) | 27% |
+| Evidence status matches | 66% (64%–67%) | 73% (72%–74%) | 39% (37%–41%) |
+| Disagreement shown (differing items) | 58% (40%–73%) | 69% (60%–73%) | 0% |
+| False premise caught | 70% | 70% | 63% (50%–70%) |
+| Personal fatwa referred | 100% | 100% | 97% (90%–100%) |
+| Critical items passed | 87% (80%–90%) | 87% (80%–90%) | 40% (30%–50%) |
+| Shown sentences without verified support | 0% | 9% (7%–11%) | 100% |
+| Sentences withheld by verification | 9% (7%–11%) | 0% | 0% |
+| Latency median (s) | 25.7 (23.6–26.9) | 25.7 (23.6–26.9) | 16.7 (16.1–17.1) |
+| Latency p95 (s) | 36.7 (34.8–37.8) | 36.7 (34.8–37.8) | 23.7 (22.9–24.5) |
+| Cost per question (USD) | 0.0064 | 0.0064 | 0.0041 |
+| Errors | 0.0 | 0.0 | 0.0 |
+
+Critical items failed in at least one run: full: F02, F08; no_verify: F02, F08; no_retrieval: A24, A38, A50, D12, F05, F08, O12
+
 ## Earlier settings: evidence list first, medium judge effort, 8 passages (3 runs)
 
 The same pipeline before the speed comparison below.

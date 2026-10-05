@@ -1,7 +1,7 @@
 # Error log: failure → cause → fix
 
 Every fix below was found by the evaluation, made in a commit, and measured again.
-Results folders: `eval/results/v1_before_fixes` (1 run, commit 38b7f4c) and `eval/results/main_v2_gpt5mini` (3 runs, commit f447b7c).
+Results folders: `eval/results/v1_before_fixes` (1 run, commit 38b7f4c), `eval/results/main_v2_gpt5mini` (3 runs, commit f447b7c) and `eval/results/main_v3_live` (3 runs, the deployed settings, commit 9bcfd8a).
 
 ## Fixed after the first full run (v1 → v2)
 | Failure (v1) | Cause | Fix | Effect (v2, mean of 3 runs) |
@@ -20,7 +20,7 @@ Results folders: `eval/results/v1_before_fixes` (1 run, commit 38b7f4c) and `eva
 | The definition of «الطهور» given to «الطاهر» | The judge couldn't see which term the quote defines | 8d6fa3b: context around the quote |
 | A faithful paraphrase rejected (لم يكره → غير مكروه) | The judge was too literal | 8d6fa3b: equivalent wording accepted |
 
-## Still failing in all 3 runs of v2
+## Still failing in all 3 runs of v2 (earlier settings)
 | Item | What happens | Cause | Next |
 |---|---|---|---|
 | A04, A20, F03, P02, P08 | No gold page cited | **Search:** no gold page among the 8 passages | Give the model 12 passages; query expansion |
@@ -30,3 +30,18 @@ Results folders: `eval/results/v1_before_fixes` (1 run, commit 38b7f4c) and `eva
 | F08 ⚠ | Blocked | **Content filter** | A custom guardrail in Foundry |
 
 Items failing in only 1 or 2 of the 3 runs (D03, D13, D14, F02, A16, D01, D02, D07, D09, D15, F01, F07) are run-to-run variation. GPT-5 models take no temperature setting.
+
+## Still failing in all 3 runs of v3 (the deployed settings)
+| Item | What happens | Cause | Next |
+|---|---|---|---|
+| A04, F03, P08 | No gold page cited | **Search:** no gold page among the passages (also in v2) | Better search: a stronger embedding model (BGE-M3 reaches 99% locally) or query rewriting |
+| D05, D09, D11 | The disagreement isn't shown | **Model:** both positions are in the passages; gpt-5-mini answers with one | A stronger answer model, with gpt-5-mini as the judge |
+| F07 | The false premise is accepted | **Model** | Same |
+| F02 ⚠ | Refuses instead of correcting the premise (al-Bukhari attribution) | **Model + search:** the Rakaiz takhrij note (p74) that names the real sources is not used | Same; give takhrij notes priority for questions about a hadith's source |
+| F08 ⚠ | Blocked | **Content filter** | A custom guardrail in Foundry |
+
+**Speed change between v2 and v3:**
+- The model now writes each quote once (no separate evidence list).
+- The judge runs at low effort, and the model gets 12 passages instead of 8.
+- Median time 34.9 s → **25.7 s**; cost per question $0.0078 → $0.0064.
+- Quality differences are within the run-to-run range. One exception: critical items 90% → 87%, because F02 now fails in all three runs instead of two.
