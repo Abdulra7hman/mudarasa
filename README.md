@@ -3,7 +3,7 @@
 **ادرس «الروض المربع» مع شروحه، وكل جملة بنصها وصفحتها.**
 *Study al-Rawd al-Murbi' with its commentaries: every sentence comes with its text and page.*
 
-العرض الحي (Live demo): https://mudarasa.azurewebsites.net · المسار: تحدي الذكاء الاصطناعي في خدمة المحتوى الإسلامي ٢٠٢٦، المسار الرابع
+العرض الحي (Live demo): https://mudarasa.azurewebsites.net · الكود (Source): https://github.com/Abdulra7hman/mudarasa · المسار: تحدي الذكاء الاصطناعي في خدمة المحتوى الإسلامي ٢٠٢٦، المسار الرابع
 
 ---
 
