@@ -61,6 +61,7 @@ PER_IP_PER_MINUTE = int(env("PER_IP_PER_MINUTE", "6"))
 # USD per 1M tokens (input, output). Reasoning tokens bill as output. Unknown models report tokens only.
 PRICES = {
     "gpt-5": (1.25, 10.0), "gpt-5-mini": (0.25, 2.0), "gpt-5-nano": (0.05, 0.40),
+    "gpt-5.4-mini": (0.825, 4.95),  # Data Zone (US) Standard, Azure retail price list, 6 Oct 2026
     "openai/gpt-5": (1.25, 10.0), "openai/gpt-5-mini": (0.25, 2.0),
     "text-embedding-3-large": (0.13, 0.0), "text-embedding-3-small": (0.02, 0.0),
 }

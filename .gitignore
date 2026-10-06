@@ -22,3 +22,6 @@ __pycache__/
 .venv/
 .pytest_cache/
 *.zip
+
+# Norsal (Baianat): licence not confirmed for redistribution; served on the site, not published in the repo
+web/fonts/Norsal-*

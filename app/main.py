@@ -6,6 +6,7 @@ Logs (no personal data, no IP addresses): data/logs/questions.jsonl, data/logs/r
 import asyncio
 import json
 import queue
+import re
 import threading
 import time
 from collections import defaultdict, deque
@@ -180,6 +181,38 @@ async def ask_stream(request: Request):
             yield f"event: {kind}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+IMAGE_RULES = (
+    "أنت تساعد طالبًا يدرس «الروض المربع» وشروحه (الفقه الحنبلي، كتاب الطهارة). أرسل الطالب صورة، وربما نصًّا معها.\n"
+    "1) text: انسخ النص العربي الظاهر في الصورة كما هو دون زيادة؛ وإن لم يكن فيها نص فاتركه فارغًا.\n"
+    "2) question: صغ سؤال الطالب في جملة عربية واحدة واضحة يمكن البحث عنها في كتب الفقه. "
+    "إن كانت الصورة صفحة أو عبارة من كتاب بلا سؤال، فاجعل السؤال: «ما معنى قوله: …؟» مع أهم عبارة فيها. "
+    "وإن كتب الطالب نصًّا مع الصورة فاعتمد عليه في فهم مراده.\n"
+    "3) إن لم يكن في الصورة ولا في نص الطالب ما يتعلق بالفقه أو بهذه الكتب، فاترك question فارغًا.\n"
+    "لا تجب عن السؤال، ولا تضف حكمًا من عندك.")
+
+
+@app.post("/api/image_question")
+async def image_question(request: Request):
+    """A photo (a page, a handwritten question, a screenshot) -> its Arabic text and the student's question.
+    The question then goes through the normal cited pipeline (/api/ask_stream). The image is not stored or logged."""
+    _limit(request)
+    body = await request.json()
+    img, text = str(body.get("image", "")), str(body.get("text", ""))[:500]
+    if len(img) > 4_500_000 or not re.match(r"data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$", img):
+        raise HTTPException(400, "الصورة غير صالحة أو أكبر من المسموح.")
+    from . import llm
+    schema = {"type": "object", "properties": {"text": {"type": "string"}, "question": {"type": "string"}}}
+    content = [{"type": "text", "text": ("نص الطالب: " + text) if text else "لم يكتب الطالب نصًّا مع الصورة."},
+               {"type": "image_url", "image_url": {"url": img, "detail": "high"}}]
+    try:
+        ans, st = await asyncio.get_running_loop().run_in_executor(
+            None, lambda: llm.ask(IMAGE_RULES, content, schema, role="judge", max_out=4000))
+    except Exception:
+        raise HTTPException(502, "تعذّرت قراءة الصورة الآن.")
+    _log("images.jsonl", {"question": (ans.get("question") or "")[:400], "cost_usd": st.get("cost_usd")})
+    return {"text": (ans.get("text") or "")[:2000], "question": (ans.get("question") or "")[:400]}
 
 
 @app.post("/api/report")
