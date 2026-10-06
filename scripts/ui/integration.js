@@ -19,8 +19,12 @@ const CLEAN = t => String(t || '').replace(/\s*\n\s*/g, ' ').trim();
 // al-Sharh al-Mumti' (r4); the Zad matn (vocalized) when reciting. One chapter is shown at a time.
 const REAL_SRC = {
   iqh:   {id:'iqh', name:'حاشية الروض المربع', short:'حاشية ابن قاسم', art:'الفقه', author:'عبد الرحمن بن محمد بن قاسم', section:'', pct:3, text:''},
-  mumti: {id:'mumti', name:'الشرح الممتع على زاد المستقنع', short:'الشرح الممتع', art:'الفقه', author:'محمد بن صالح العثيمين', section:'', pct:9, text:''}};
-const BOOK_SRC = {r3:'iqh', r4:'mumti'};
+  mumti: {id:'mumti', name:'الشرح الممتع على زاد المستقنع', short:'الشرح الممتع', art:'الفقه', author:'محمد بن صالح العثيمين', section:'', pct:9, text:''},
+  zadm:  {id:'zadm', name:'زاد المستقنع', short:'زاد المستقنع', art:'الفقه', author:'شرف الدين موسى الحجاوي', section:'', pct:12, text:''}};
+const BOOK_SRC = {r3:'iqh', r4:'mumti', b11:'zadm'};
+const MATN_OF = t => (String(t).match(/\(([^()]*)\)/g) || []).map(m => m.slice(1, -1).trim()).filter(x => x && !/^[\s٠-٩0-9]+$/.test(x)).join(' ');
+const estimatePlain = (dur, words) => { const lens = words.map(w => w.length + 1), tot = lens.reduce((x, y) => x + y, 0) || 1; let acc = 0;
+  return words.map((w, k) => { const t = Math.round(dur * acc / tot); acc += lens[k]; return {t, i:k}; }); };
 const CITE_SRC = {1679:['zad','r1'], 147658:['zad','r2'], 12216:['iqh','r3'], 10649:['mumti','r4']};
 const SAY_PREFIX = 'قال ابن قاسم: ';
 const estimate = (dur, words, lead) => {   // Ibn Qasim clips have no word marks: spread the clip over the words by length
@@ -57,11 +61,13 @@ P.__loadReal = async function(){
     const [lists, mans, chaps, matns] = await Promise.all([all(c => api('/api/listen/' + c)), all(c => api('/api/audio/' + c).catch(() => ({clips:[]}))),
       all(c => api('/api/chapter/' + c).catch(() => ({paras:[]}))), all(c => api('/api/matn/' + c).catch(() => ({lines:[]})))]);
     const clips = {}; mans.forEach(m => (m.clips || []).forEach(c => clips[c.id] = c));
-    const R = {zad:[], iqh:[], mumti:[], matn:[]}, est = {};
+    const R = {zad:[], iqh:[], mumti:[], matn:[], zadm:[]}, est = {};
     CHAPTERS.forEach(([c], ci) => {
       const seen = new Set();
       lists[ci].paras.forEach(p => {
         R.zad.push({id:p.id, text:CLEAN(p.text), ch:c, page:p.page, vol:p.vol, link:p.link, anchors:p.anchor_paras || []});
+        const mt = MATN_OF(CLEAN(p.text)), mid = p.id + ':matn';
+        if (mt) { R.zadm.push({id:mid, text:mt, ch:c, page:p.page, vol:p.vol, link:p.link}); if (clips[mid]) est[mid] = estimatePlain(clips[mid].duration_ms, SPLIT(mt)); }
         (p.notes || []).forEach(nt => { if (seen.has(nt.id)) return; seen.add(nt.id);
           const ws = SPLIT(CLEAN(nt.text)); R.iqh.push({id:nt.id, text:'(' + toAr(nt.n) + ') ' + ws.join(' '), ch:c});
           if (clips[nt.id]) est[nt.id] = estimate(clips[nt.id].duration_ms, ws, 1); }); });
@@ -91,7 +97,7 @@ P.__viewFor = function(src, ch){
 // which real paragraphs the reader shows for a source: the open chapter, or the whole matn when reciting
 P.__view = function(id){
   if (!this.__R) return null;
-  const s = this.state || {}, src = s.mode === 'recite' && (id === 'zad' || REAL_SRC[id]) ? 'matn' : id;
+  const s = this.state || {}, src = s.mode === 'recite' && s.screen !== 'sources' && (id === 'zad' || REAL_SRC[id]) ? 'matn' : id;
   if (!this.__R[src]) return null;
   return this.__viewFor(src, src === 'matn' ? 'all' : (s.rch || 'water'));
 };
@@ -101,7 +107,7 @@ P.__pages = function(V){ return pagesFor(V, V.src === 'matn' ? RECITE_WORDS : PA
 P.__pageNow = function(V){
   const s = this.state, list = this.__pages(V);
   if (V.src === 'matn') return pageOf(list, Math.min(s.pos || 0, Math.max(0, V.n - 1)));
-  if (s.playing && s.cur >= 0) return pageOf(list, s.cur);
+  if (s.playing && s.cur >= 0 && !s.rdFree) return pageOf(list, s.cur);
   return Math.max(0, Math.min(s.rpage || 0, list.length - 1));
 };
 P.__scrollTop = function(i){
@@ -118,7 +124,7 @@ P.__turn = function(V, p){
   }
   if (p < 0) { const pc = PREV_CH[V.ch]; if (pc) this.__goChapter(pc, this.__pages(this.__viewFor(V.src, pc)).length - 1); return; }
   if (p >= list.length) { if (NEXT_CH[V.ch]) this.__goChapter(NEXT_CH[V.ch]); return; }
-  if (s.playing) { this.startPlay(list[p][0]); return; }   // listening continues from the new page
+  if (s.playing) { this.setState({rdFree:true, rpage:p}); this.__scrollTop(list[p][0]); return; }   // browse; the voice goes on where it is
   this.setState({rpage:p, cur:-1, mean:null}); this.__scrollTop(list[p][0]);
 };
 const _parse = P.parse;
@@ -154,7 +160,7 @@ const startDigits = () => {
 const _mount = P.componentDidMount;
 P.componentDidMount = function(){
   this.BOOKS = this.BOOKS.map(b => BOOK_SRC[b.id] ? {...b, src: BOOK_SRC[b.id]} : b);
-  this.EXTRA = [...this.EXTRA, ...Object.values(REAL_SRC)];
+  this.EXTRA = [...this.EXTRA, ...Object.values(REAL_SRC).map(x => ({...x}))];   // copies: the titles change while reciting, REAL_SRC keeps the originals
   this.REAL = [...this.REAL, ...Object.keys(REAL_SRC)];
   window.__mudarasa = this;
   document.title = 'مدارسة · رفيق طالب العلم الشرعي';   // the design's loader replaces the page and drops its title
@@ -162,6 +168,11 @@ P.componentDidMount = function(){
   if (!window.__mdDigits) { window.__mdDigits = true; startDigits(); }
   if (!window.__mdSel) { window.__mdSel = true;
     document.addEventListener('mouseup', e => setTimeout(() => this.__onSelect(e), 0));
+    const browse = () => { const st = this.state, V = this.__view(st.srcId);   // the reader scrolls on purpose: stop following the voice
+      if (!st.playing || st.rdFree || st.screen !== 'sources' || !V) return;
+      this.setState({rdFree:true, rpage: st.cur >= 0 ? pageOf(this.__pages(V), st.cur) : st.rpage}); };
+    document.addEventListener('wheel', browse, {passive:true}); document.addEventListener('touchmove', browse, {passive:true});
+    document.addEventListener('keydown', e => { if (['PageDown','PageUp','ArrowDown','ArrowUp','Home','End',' '].includes(e.key) && !/INPUT|TEXTAREA/.test((e.target || {}).nodeName || '')) browse(); });
     document.addEventListener('scroll', e => {
       const s = this.state; if (s.selChip) this.setState({selChip:null});
       if (s.screen !== 'sources' || s.srcView !== 'reader') return;
@@ -169,7 +180,10 @@ P.componentDidMount = function(){
       if (stuck !== !!s.rdStuck) this.setState({rdStuck: stuck}); }, true); }
 };
 const _go = P.go;
-P.go = function(screen, extra){ return _go.call(this, screen, {rdStuck:false, ...(extra || {})}); };
+P.go = function(screen, extra){
+  const ex = {rdStuck:false, rdFree:false, ...(extra || {})};
+  if (screen === 'sources' && (ex.mode || this.state.mode) === 'recite') ex.mode = 'listen';   // books open for reading, never hidden
+  return _go.call(this, screen, ex); };
 const _stop = P.stopTimers;
 P.stopTimers = function(){
   const s = this.state || {}, V = this.__view && this.__view(s.srcId);
@@ -210,7 +224,7 @@ P.startPlay = function(from, speed){
     a.onended = () => { if (this.__audio === a) play(pi + 1, V.offs[pi + 1]); };
     a.play().catch(() => this.setState({playing:false}));
   };
-  this.setState({cur: from, playing: true, hl:null});
+  this.setState({cur: from, playing: true, hl:null, rdFree:false});
   play(paraOf(V, Math.max(0, from)), Math.max(0, from));
 };
 const _togglePlay = P.togglePlay;
@@ -229,26 +243,41 @@ const loadSDK = () => window.SpeechSDK ? Promise.resolve() : new Promise((ok, no
 const _toggleRec = P.toggleRec;
 P.toggleRec = async function(){
   if (this.state.recOn) { this.__stopRec && this.__stopRec(); this.setState({recOn:false}); return; }
-  const words = this.parse(this.state.srcId).paras.flat();
+  const words = this.parse(this.state.srcId).paras.flat(), E = words.map(w => KEY(w.t));
   const tok = await api('/api/speech/token').catch(() => ({available:false}));
   if (!tok.available) return _toggleRec.call(this);
   try { await loadSDK(); } catch(e) { return _toggleRec.call(this); }
   const S = window.SpeechSDK, cfg = S.SpeechConfig.fromAuthorizationToken(tok.token, tok.region); cfg.speechRecognitionLanguage = 'ar-SA';
   const rec = new S.SpeechRecognizer(cfg, S.AudioConfig.fromDefaultMicrophoneInput());
-  const pl = S.PhraseListGrammar.fromRecognizer(rec); words.slice(this.state.pos, this.state.pos + 60).forEach(w => pl.addPhrase(w.t.replace(/[،.:«»؛]/g,'')));
-  const consume = text => this.setState(s => {
-    const heard = String(text).split(/\s+/).map(KEY).filter(Boolean); let pos = s.pos, ok = 0; const rev = {...s.rev};
-    for (const h of heard) { if (pos >= words.length) break;
-      const e = KEY(words[pos].t);
-      if (sim(h, e) >= 0.75 || (h.length > 2 && e.includes(h) && h.length / e.length > 0.6)) { rev[pos] = 'ok'; pos++; ok++; continue; }
-      let j = 1; while (j <= 3 && pos + j < words.length && sim(h, KEY(words[pos + j].t)) < 0.75) j++;
-      if (j <= 3 && pos + j < words.length) { for (let k = pos; k < pos + j; k++) rev[k] = 'err'; rev[pos + j] = 'ok'; pos += j + 1; ok++; continue; }
-      rev[pos] = 'err'; pos++; }
-    // an utterance that mostly doesn't match this place (a repeat, or a different passage) is not marked: ask to resume
-    if (heard.length >= 3 && ok / heard.length < 0.4) return {recMiss: 'لم يطابق ما سمعته هذا الموضع؛ أكمل من «' + words[s.pos].t + '»'};
-    return {rev, pos, recOn: pos < words.length, recMiss: null};
-  });
-  rec.recognized = (_, e) => { if (e.result && e.result.text) consume(e.result.text); if (this.state.pos >= words.length) this.__stopRec(); };
+  // the recogniser is told which words to expect next (the next 30 from where the reciter is), as the first version did per line
+  const pl = S.PhraseListGrammar.fromRecognizer(rec);
+  const hint = from => { try { pl.clear(); } catch(e) {} words.slice(from, from + 30).forEach(w => pl.addPhrase(w.t.replace(/[،.:«»؛()]/g, ''))); };
+  // align what was heard with the expected words from `start` (the first version's rules)
+  const align = (start, text) => {
+    const H = String(text).split(/\s+/).map(KEY).filter(Boolean), out = {}; let i = start, ok = 0;
+    for (let h = 0; h < H.length && i < E.length; h++) {
+      if (sim(H[h], E[i]) >= 0.75 || (H[h].length > 2 && E[i].includes(H[h]) && H[h].length / E[i].length > 0.6)) { out[i] = 'ok'; i++; ok++; continue; }
+      let j = 1; while (j <= 3 && i + j < E.length && sim(H[h], E[i + j]) < 0.75) j++;
+      if (j <= 3 && i + j < E.length) { for (let k = i; k < i + j; k++) out[k] = 'err'; out[i + j] = 'ok'; i += j + 1; ok++; continue; }
+      if (h + 1 < H.length && sim(H[h] + H[h + 1], E[i]) >= 0.75) { out[i] = 'ok'; i++; h++; ok++; continue; }   // one word heard as two
+      out[i] = 'err'; i++;
+    }
+    return {out, pos: i, ok, n: H.length};
+  };
+  // each utterance is aligned from where it began: words appear while speaking; mistakes are marked when it ends
+  let base = this.state.pos, baseRev = {...this.state.rev};
+  const show = (text, final) => {
+    const r = align(base, text);
+    if (final && r.n >= 4 && r.ok / r.n < 0.3) {   // almost nothing matches this place (a repeat or another passage): not marked
+      this.setState({rev: baseRev, pos: base, recMiss: 'لم يطابق ما سمعته هذا الموضع؛ أكمل من «' + words[Math.min(base, words.length - 1)].t + '»'}); return; }
+    const marks = final ? r.out : Object.fromEntries(Object.entries(r.out).filter(([, v]) => v === 'ok'));
+    const rev = {...baseRev, ...marks}, done = Object.keys(marks).map(k => +k + 1), pos = final ? r.pos : Math.max(base, ...done);
+    this.setState({rev, pos, recOn: pos < E.length, recMiss: null});
+    if (final) { base = r.pos; baseRev = rev; hint(base); }
+  };
+  hint(base);
+  rec.recognizing = (_, e) => { if (e.result && e.result.text) show(e.result.text, false); };
+  rec.recognized = (_, e) => { if (e.result && e.result.text) show(e.result.text, true); if (base >= E.length && this.__stopRec) this.__stopRec(); };
   this.__stopRec = () => { try { rec.stopContinuousRecognitionAsync(() => rec.close(), () => {}); } catch(e) {} this.__stopRec = null; };
   rec.startContinuousRecognitionAsync();
   this.setState({recOn:true});
@@ -394,10 +423,10 @@ P.renderVals = function(){
   const s = this.state, V = this.__view(s.srcId), real = !!V;
   if (this.__R) {   // the reader's title, author and section follow the open book and chapter
     const z = this.EXTRA.find(x => x.id === 'zad'), chT = chName(s.rch || 'water');
-    if (z && s.mode === 'recite') Object.assign(z, {name:'زاد المستقنع', author:'موسى الحجاوي', section:'كتاب الطهارة: المياه، الآنية، الاستنجاء'});
+    if (z && s.mode === 'recite' && s.screen !== 'sources') Object.assign(z, {name:'زاد المستقنع', author:'موسى الحجاوي', section:'كتاب الطهارة: المياه، الآنية، الاستنجاء'});
     else if (z) Object.assign(z, {name: ZAD_NAMES[s.rBook] || ZAD_NAMES.r2, author:'منصور بن يونس البهوتي', section:'كتاب الطهارة · ' + chT});
     for (const r of Object.values(REAL_SRC)) { const e = this.EXTRA.find(x => x.id === r.id); if (!e) continue;   // reciting is always the Zad matn
-      if (s.mode === 'recite') Object.assign(e, {name:'زاد المستقنع', author:'موسى الحجاوي', section:'كتاب الطهارة: المياه، الآنية، الاستنجاء'});
+      if (s.mode === 'recite' && s.screen !== 'sources') Object.assign(e, {name:'زاد المستقنع', author:'موسى الحجاوي', section:'كتاب الطهارة: المياه، الآنية، الاستنجاء'});
       else Object.assign(e, {name:r.name, author:r.author, section:'كتاب الطهارة · ' + chT}); }
   }
   const v = _rv.call(this);
@@ -406,6 +435,10 @@ P.renderVals = function(){
   const paged = this.__paged();
   // settings: how the reader shows the text
   v.optReadMode = [['pages','صفحات'],['scroll','تمرير متصل']].map(([k, l]) => ({label:l, pick:() => this.setState({set:{...this.state.set, readMode:k}, rpage:0}), ...chip((paged ? 'pages' : 'scroll') === k)}));
+  v.pgBackShow = !!(s.playing && s.rdFree);
+  v.pgBack = () => { const st = this.state, V2 = this.__view(st.srcId); if (!V2) return; this.__focus = null;
+    this.setState({rdFree:false, rpage: st.cur >= 0 ? pageOf(this.__pages(V2), st.cur) : st.rpage}); scrollToWord(st.cur, 'center'); };
+  v.ctxOpts = (v.ctxOpts || []).slice(0, 1);   // questions are answered from the Zad family only
   v.rdTitleFs = s.rdStuck ? '24px' : '40px'; v.rdMetaDisp = s.rdStuck ? 'none' : 'inline'; v.rdShadow = s.rdStuck ? '0 1px 0 var(--color-divider)' : 'none';
   const hoverOn = (s.set || {}).hoverMean !== false;
   v.tgHoverMean = {bd: hoverOn ? 'var(--color-accent)' : 'var(--color-divider)', bg: hoverOn ? 'var(--color-accent)' : 'var(--color-neutral-200)', knob: hoverOn ? 'var(--color-bg)' : 'var(--color-neutral-500)', x: hoverOn ? '22px' : '2px'};
@@ -435,7 +468,7 @@ P.renderVals = function(){
       this.__pgKey = key;
       const canPrev = pg > 0 || (!isRec && !!PREV_CH[V.ch]), canNext = pg < last || (!isRec && !!NEXT_CH[V.ch]);
       v.pgShow = true;
-      v.pgLabel = 'الصفحة ' + toAr(pg + 1) + ' من ' + toAr(list.length) + (isRec ? ' · تنتقل وحدها مع تسميعك' : s.playing ? ' · تنتقل وحدها مع الاستماع' : '');
+      v.pgLabel = 'الصفحة ' + toAr(pg + 1) + ' من ' + toAr(list.length) + (isRec ? ' · تنتقل وحدها مع تسميعك' : s.playing && !s.rdFree ? ' · تنتقل وحدها مع الاستماع' : s.playing ? ' · تتصفح والقراءة مستمرة' : '');
       v.pgPrevLabel = pg > 0 ? 'السابق' : (!isRec && PREV_CH[V.ch] ? 'الباب السابق' : 'السابق');
       v.pgNextLabel = pg < last ? 'التالي' : (!isRec && NEXT_CH[V.ch] ? 'الباب التالي: ' + chName(NEXT_CH[V.ch]) : 'نهاية المتاح');
       v.pgPrevOp = canPrev ? '1' : '0.4'; v.pgNextOp = canNext ? '1' : '0.4';
@@ -516,7 +549,7 @@ P.renderVals = function(){
   const imgs = {draft: s.chatImg}; (s.msgs || []).forEach(m => { if (m.img) imgs['m' + m.id] = m.img; });
   requestAnimationFrame(() => document.querySelectorAll('img[data-img-key]').forEach(el => { const u = imgs[el.dataset.imgKey]; if (u && el.getAttribute('src') !== u) el.setAttribute('src', u); }));
   // keep the word being read (or recited) in view
-  const focus = s.mode === 'recite' ? (s.recOn ? s.pos : null) : (s.playing ? s.cur : null);
+  const focus = s.mode === 'recite' ? (s.recOn ? s.pos : null) : (s.playing && !s.rdFree ? s.cur : null);
   if (focus != null && focus >= 0 && focus !== this.__focus) { this.__focus = focus;
     requestAnimationFrame(() => { const el = document.querySelector('[data-wi="' + focus + '"]'); if (!el) return; const r = el.getBoundingClientRect();
       if (r.top < 190 || r.bottom > innerHeight * 0.6) el.scrollIntoView({block:'center', behavior:'smooth'}); }); }

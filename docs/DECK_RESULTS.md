@@ -24,13 +24,6 @@ Source: `eval/REPORT.md` § Main result, folder `eval/results/main_v3_live`.
 
 Source: `CONTENT.md`, `app/pipeline.py`.
 
-## Slide: Against Qaf (20 probes, the same questions)
-Source: `eval/qaf/COMPARISON.md` (filled after the Qaf column is entered).
-
-Mudarasa on the 14 chat probes (3 runs, majority vote): **11 pass, 1 partial, 2 fail**. The other 6 probes are features (paragraph-by-paragraph study, edition differences, quizzes, progress), scored from the screens.
-
-Qaf: *to be filled in from the sheet.*
-
 ## Slide: Running it
 | | Value | Source |
 |---|---|---|

@@ -185,6 +185,11 @@ def main():
     for a in reversed(starts):
         inner = tpl.find("</sc-for>", a); outer = tpl.find("</sc-for>", inner + 1) + len("</sc-for>")
         tpl = tpl[:outer] + PAGER_MARKUP + tpl[outer:]
+    # 3b) listening: when the reader browses away from the voice, a button brings the view back to it
+    a = tpl.find('sc-camel-on-click="{{ togglePlay }}"'); b = tpl.find("</button>", a) + len("</button>")
+    assert a > 0 and b > a
+    tpl = tpl[:b] + ('<sc-if value="{{ pgBackShow }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary" sc-camel-on-click="{{ pgBack }}" '
+                     'style="font-size:13px;white-space:nowrap">عُد إلى موضع القراءة</button></sc-if>') + tpl[b:]
     # 4) the meaning panel: Dorar link-out after the rows, and a close button
     a = tpl.find('<sc-for list="{{ mean.rows }}"'); b = tpl.find("</sc-for>", a) + len("</sc-for>")
     assert a > 0 and b > a
