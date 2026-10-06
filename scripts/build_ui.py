@@ -226,11 +226,30 @@ def main():
                '<div style="display:flex;flex-direction:column;gap:2px;min-width:200px;flex:1"><span style="font-weight:700;font-size:15px">عرض النص في القارئ</span>'
                '<span style="font-size:12px;color:var(--color-neutral-700)">صفحات (٣٠٠ كلمة، و٥٠ في التسميع) تنتقل بـ«التالي» وتنتقل وحدها مع الاستماع والتسميع، أو تمرير متصل كما في تراث</span></div>'
                '<div style="display:flex;gap:var(--space-1);flex-wrap:wrap">' + opts + '</div></div>\n            ')
-    tpl = tpl[:row] + new_row + tpl[row:]
+    toggle = ('<button sc-camel-on-click="{{ setHoverMean }}" style="width:44px;height:24px;flex:none;border-radius:999px;border:1px solid {{ tgHoverMean.bd }};background:{{ tgHoverMean.bg }};position:relative;cursor:pointer;transition:all .2s">'
+              '<span style="position:absolute;top:2px;width:18px;height:18px;border-radius:50%;background:{{ tgHoverMean.knob }};transition:all .2s;inset-inline-start:{{ tgHoverMean.x }}"></span></button>')
+    hover_row = ('<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--color-divider);flex-wrap:wrap">'
+                 '<div style="display:flex;flex-direction:column;gap:2px;min-width:200px;flex:1"><span style="font-weight:700;font-size:15px">المعنى عند الوقوف على الكلمة</span>'
+                 '<span style="font-size:12px;color:var(--color-neutral-700)">في وضع الاستماع: قف على كلمة ثلاث ثوانٍ فيظهر معناها. أطفئه إن كان يظهر وأنت لا تريده</span></div>'
+                 + toggle + '</div>\n            ')
+    tpl = tpl[:row] + new_row + hover_row + tpl[row:]
     # 8) flashcards: a page to make a deck with several cards; "add cards" inside an open deck
     tpl = once(tpl, '<sc-if value="{{ deckListView }}" hint-placeholder-val="{{ true }}">', DECK_EDITOR + '<sc-if value="{{ deckListView }}" hint-placeholder-val="{{ true }}">', "deck list")
     back = '<button class="btn btn-secondary" sc-camel-on-click="{{ backToDecks }}">المجموعات</button>'
     tpl = once(tpl, back, back + '<button class="btn btn-secondary" sc-camel-on-click="{{ deckAddCards }}">+ إضافة بطاقات</button>', "deck study header")
+    # 8b) the founder's photo in the "صاحب الفكرة" boxes, in place of the letter (when web/img/founder.png exists; not in git)
+    if (ROOT / "web" / "img" / "founder.png").exists():
+        avatar = ('<div style="width:52px;height:52px;flex:none;border-radius:50%;border:1px solid var(--color-accent);display:grid;place-items:center;'
+                  'font-weight:700;font-size:20px;color:var(--color-accent-700)">ع</div>')
+        photo = ('<img src="/img/founder.png" alt="عبدالرحمن المزيعل" style="width:64px;height:64px;flex:none;border-radius:50%;'
+                 'border:1px solid var(--color-accent);object-fit:cover">')
+        done, pos = 0, 0
+        while (i := tpl.find("صاحب الفكرة", pos)) >= 0:
+            j = tpl.find(avatar, i)
+            if 0 < j - i < 400:
+                tpl = tpl[:j] + photo + tpl[j + len(avatar):]; done += 1
+            pos = i + 1
+        assert done >= 1, "founder box not found"
     # 9) integration code after the design's logic class
     i = tpl.find('<script type="text/x-dc"'); j = tpl.find("</script>", i)
     assert i > 0 and j > i

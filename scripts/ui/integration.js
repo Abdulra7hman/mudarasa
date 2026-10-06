@@ -282,14 +282,17 @@ P.__pickImage = function(){
 
 /* ---------- chat: cited, checked answers ---------- */
 const STAGE_TEXT = {image:'يقرأ الصورة…', search:'يبحث في المصادر…', write:'وجد النصوص، ويكتب الجواب منها…', verify:'يتحقق من كل جملة واقتباسها…'};
-const streamAsk = async (body, onStage) => {
+const foundLine = ps => { const seen = new Set(), out = [];
+  for (const p of ps || []) { const k = p.book + '|' + p.page; if (seen.has(k)) continue; seen.add(k); out.push(String(p.book).replace(/ \(ط [^)]*\)/, '').replace(/ لابن [^،]*$/, '') + ' ص' + toAr(p.page)); if (out.length >= 4) break; }
+  return out.length ? 'وجد النصوص في: ' + out.join('، ') + (ps.length > out.length ? '…' : '') : ''; };
+const streamAsk = async (body, onStage, onFound) => {
   const resp = await fetch('/api/ask_stream', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
   if (!resp.ok || !resp.body) return api('/api/ask', body);
   const reader = resp.body.getReader(), dec = new TextDecoder(); let buf = '', got = null;
   while (true) { const {value, done} = await reader.read(); if (done) break; buf += dec.decode(value, {stream:true}); let i;
     while ((i = buf.indexOf('\n\n')) >= 0) { const block = buf.slice(0, i); buf = buf.slice(i + 2);
       const kind = (block.match(/^event: (.*)$/m) || [])[1], data = JSON.parse((block.match(/^data: (.*)$/m) || [, 'null'])[1]);
-      if (kind === 'stage') onStage(data); else if (kind === 'result') got = data; } }
+      if (kind === 'stage') onStage(data); else if (kind === 'passages' && onFound) onFound(data); else if (kind === 'result') got = data; } }
   return got || api('/api/ask', body);
 };
 P.send = async function(text){
@@ -307,7 +310,7 @@ P.send = async function(text){
     if (d && d.question) { question = d.question; pre = 'فهمت من الصورة: «' + d.question + '»'; upd(() => ({stage:'search'})); }
     else r = {sentences:[], message:'لم أتبيّن في الصورة سؤالًا يتعلق بالكتب المحمّلة. اكتب سؤالك، أو أرسل صورة أوضح.', status:'not_found', status_ar:'لم يوجد نص'};
   }
-  if (!r) { try { r = await streamAsk({question, depth:{0:'short', 1:'medium', 2:'long'}[depth] || 'medium'}, stage => upd(() => ({stage}))); } catch(e) {} }
+  if (!r) { try { r = await streamAsk({question, depth:{0:'short', 1:'medium', 2:'long'}[depth] || 'medium'}, stage => upd(() => ({stage})), ps => upd(() => ({found: foundLine(ps)}))); } catch(e) {} }
   if (!r) r = {sentences:[], message:'تعذّر الوصول إلى الخادم الآن. حاول بعد قليل.', status:'not_found', status_ar:'لم يوجد نص'};
   const cites = [], idx = {};
   const lines = (r.sentences || []).map(s => { if (!s.cite) return s.text;
@@ -403,6 +406,10 @@ P.renderVals = function(){
   // settings: how the reader shows the text
   v.optReadMode = [['pages','صفحات'],['scroll','تمرير متصل']].map(([k, l]) => ({label:l, pick:() => this.setState({set:{...this.state.set, readMode:k}, rpage:0}), ...chip((paged ? 'pages' : 'scroll') === k)}));
   v.rdTitleFs = s.rdStuck ? '24px' : '40px'; v.rdMetaDisp = s.rdStuck ? 'none' : 'inline'; v.rdShadow = s.rdStuck ? '0 1px 0 var(--color-divider)' : 'none';
+  const hoverOn = (s.set || {}).hoverMean !== false;
+  v.tgHoverMean = {bd: hoverOn ? 'var(--color-accent)' : 'var(--color-divider)', bg: hoverOn ? 'var(--color-accent)' : 'var(--color-neutral-200)', knob: hoverOn ? 'var(--color-bg)' : 'var(--color-neutral-500)', x: hoverOn ? '22px' : '2px'};
+  v.setHoverMean = () => this.setState({set: {...this.state.set, hoverMean: !hoverOn}});
+  if (!hoverOn) (v.paras || []).forEach(p => (p.words || []).forEach(w => { w.enter = () => {}; if (w.title) w.title = w.title.replace(' · قف عليها ثلاث ثوانٍ لمعناها', ''); }));
   v.pgShow = false; v.pgLabel = ''; v.pgPrevLabel = 'السابق'; v.pgNextLabel = 'التالي'; v.pgPrevOp = '1'; v.pgNextOp = '1'; v.pgPrev = () => {}; v.pgNext = () => {};
   v.bmBtnLabel = 'علامة'; v.bmBtnTitle = 'ضع علامة عند كلمة'; v.bmBtnBg = ''; v.bmBtnBd = '';
   if (real) {
@@ -514,7 +521,7 @@ P.renderVals = function(){
       if (r.top < 190 || r.bottom > innerHeight * 0.6) el.scrollIntoView({block:'center', behavior:'smooth'}); }); }
   // chat turns: stage while waiting, image, citations (each opens the book at the quote) and evidence status
   if (Array.isArray(v.turns)) v.turns = v.turns.map((t, i) => { const m = this.state.msgs[i] || {};
-    if (m.pending) t = {...t, a: STAGE_TEXT[m.stage] || t.a};
+    if (m.pending) t = {...t, a: (STAGE_TEXT[m.stage] || t.a) + (m.found && m.stage !== 'search' ? '\n' + m.found : '')};
     const done = !m.pending && m.status && (m.shown == null || m.shown >= String(m.a || '').split(' ').length);
     const pvOpen = done && s.cpv && s.cpv.mid === m.id && (m.cites || [])[s.cpv.k], pvc = pvOpen ? m.cites[s.cpv.k] : null, pv = pvc ? this.__citePreview(pvc) : null;
     return {...t, hasImg: !!m.img, imgKey: m.img ? 'm' + m.id : '', hasCites: !!done,

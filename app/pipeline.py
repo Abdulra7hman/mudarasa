@@ -119,7 +119,8 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=No
     ctx = "\n\n".join(f"[P{i}] {p['book']}، ج{p['vol']} ص{p['page']} ({p['kind']}):\n{p['text']}" for i, p in enumerate(shown, 1))
     rules, schema = (P.RULES_V2, P.SCHEMA_ANSWER) if C.EVIDENCE_FIRST else (P.RULES_FAST, P.SCHEMA_ANSWER_FAST)
     system = rules + (P.GENERAL_MODE if personal else "") + P.DEPTH.get(depth or "medium", "")
-    answer_future = _POOL.submit(llm.ask, system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", schema, role="answer", provider=provider)
+    answer_future = _POOL.submit(llm.ask, system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", schema, role="answer", provider=provider,
+                                 effort=C.EFFORT_BY_DEPTH.get(depth or "medium"))
     if gate_result() in P.REFUSALS:  # the scope check finished first and says: refuse now (the answer is discarded)
         return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
     try:

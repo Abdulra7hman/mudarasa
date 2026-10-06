@@ -25,3 +25,5 @@ __pycache__/
 
 # Norsal (Baianat): licence not confirmed for redistribution; served on the site, not published in the repo
 web/fonts/Norsal-*
+# the founder photo in the About box: served on the site, not kept in the repository
+web/img/founder.*

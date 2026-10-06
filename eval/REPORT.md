@@ -110,19 +110,23 @@ The fast setting loses a critical false-premise item, so the middle one is used.
 gpt-5.4-mini got quota on 6 Oct (Data Zone Standard, US). It was run on the full test set with the same pipeline and
 the same judge (gpt-5-mini). Folders `eval/results/m54_medium` and `eval/results/m54_low` (1 run each; gpt-5-mini: 3 runs).
 
-| Metric | gpt-5-mini, medium (deployed) | gpt-5.4-mini, medium | gpt-5.4-mini, low |
-|---|---|---|---|
-| Citation accuracy (gold page ±1) | **90%** (88–92) | 87% | 78% |
-| Share of cited sentences on a gold page | 77% (75–78) | **91%** | 85% |
-| Correct refusal (out of library) | 98% (94–100) | **100%** | **100%** |
-| False refusal (answerable) | **4%** (4–6) | 11% | 17% |
-| Invented content where refusal expected | 2% (0–7) | **0%** | **0%** |
-| Evidence status matches | 66% (64–67) | **67%** | 64% |
-| Disagreement shown | **58%** (40–73) | 33% | 27% |
-| Critical items passed | **87%** (80–90) | 80% | 80% |
-| Sentences withheld by verification | 9% (7–11) | 15% | 15% |
-| Latency median (s) | 25.7 | 13.0 | **6.8** |
-| Cost per question (USD) | 0.0064 | 0.0072 | **0.0038** |
+| Metric | gpt-5-mini, medium (deployed) | gpt-5.4-mini, medium | gpt-5.4-mini, low | gpt-5.4-mini, medium, quote moved* | gpt-5-mini, low |
+|---|---|---|---|---|---|
+| Citation accuracy (gold page ±1) | **90%** (88–92) | 87% | 78% | 88% | 84% |
+| Share of cited sentences on a gold page | 77% (75–78) | **91%** | 85% | **91%** | 76% |
+| Correct refusal (out of library) | 98% (94–100) | **100%** | **100%** | **100%** | 94% |
+| False refusal (answerable) | **4%** (4–6) | 11% | 17% | 11% | 6% |
+| Invented content where refusal expected | 2% (0–7) | **0%** | **0%** | **0%** | 7% |
+| Evidence status matches | 66% (64–67) | 67% | 64% | **72%** | 54% |
+| Disagreement shown | **58%** (40–73) | 33% | 27% | 33% | 47% |
+| Critical items passed | **87%** (80–90) | 80% | 80% | 70% | 80% |
+| Sentences withheld by verification | 9% (7–11) | 15% | 15% | 7% | 16% |
+| Latency median (s) | 25.7 | 13.0 | **6.8** | 13.6 | 13.1 |
+| Cost per question (USD) | 0.0064 | 0.0072 | **0.0038** | 0.0070 | 0.0029 |
+
+\* A quote that is word for word in another retrieved passage is kept and cited where it really is (folder `m54_fix`;
+not deployed). gpt-5-mini at low effort: folder `mini_low`. Every faster setting loses on false refusals or critical
+items, and low effort invents content where it should refuse; answers stay at gpt-5-mini, medium effort.
 
 Before verification, gpt-5.4-mini's answers cite as well (92%) and match the evidence status better (81%), but it writes
 fewer sentences (164 per run against 281) and more of its quotes are not word for word (8.5% of sentences, against 4.6%),

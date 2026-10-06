@@ -1,0 +1,231 @@
+{
+ "meta": {
+  "tag": "m54_fix",
+  "set": "eval/testset.jsonl",
+  "items": 100,
+  "systems": "full",
+  "runs": 1,
+  "provider": "azure",
+  "answer_model": "gpt-5.4-mini",
+  "judge_model": "gpt-5-mini",
+  "effort_answer": "medium",
+  "effort_judge": "medium",
+  "embed": "azure:text-embedding-3-small",
+  "commit": "7fec268",
+  "started": "2026-10-06T17:06:35",
+  "prices": {
+   "gpt-5": [
+    1.25,
+    10.0
+   ],
+   "gpt-5-mini": [
+    0.25,
+    2.0
+   ],
+   "gpt-5-nano": [
+    0.05,
+    0.4
+   ],
+   "gpt-5.4-mini": [
+    0.825,
+    4.95
+   ],
+   "openai/gpt-5": [
+    1.25,
+    10.0
+   ],
+   "openai/gpt-5-mini": [
+    0.25,
+    2.0
+   ],
+   "text-embedding-3-large": [
+    0.13,
+    0.0
+   ],
+   "text-embedding-3-small": [
+    0.02,
+    0.0
+   ]
+  },
+  "finished": "2026-10-06T17:15:21"
+ },
+ "systems": {
+  "full": {
+   "runs": 1,
+   "n": 100,
+   "citation_hit": {
+    "mean": 0.8795180722891566,
+    "min": 0.8795180722891566,
+    "max": 0.8795180722891566
+   },
+   "cited_on_gold_share": {
+    "mean": 0.9144144144144143,
+    "min": 0.9144144144144143,
+    "max": 0.9144144144144143
+   },
+   "correct_refusal": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "false_refusal": {
+    "mean": 0.10843373493975904,
+    "min": 0.10843373493975904,
+    "max": 0.10843373493975904
+   },
+   "invented_on_refusal": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "status_ok": {
+    "mean": 0.72,
+    "min": 0.72,
+    "max": 0.72
+   },
+   "differing_shown": {
+    "mean": 0.3333333333333333,
+    "min": 0.3333333333333333,
+    "max": 0.3333333333333333
+   },
+   "premise_caught": {
+    "mean": 0.7,
+    "min": 0.7,
+    "max": 0.7
+   },
+   "referral": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "critical_pass": {
+    "mean": 0.7,
+    "min": 0.7,
+    "max": 0.7
+   },
+   "unverified_shown_share": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "dropped_share": {
+    "mean": 0.07333333333333333,
+    "min": 0.07333333333333333,
+    "max": 0.07333333333333333
+   },
+   "latency_median_s": {
+    "mean": 13.6,
+    "min": 13.6,
+    "max": 13.6
+   },
+   "latency_p95_s": {
+    "mean": 35.8,
+    "min": 35.8,
+    "max": 35.8
+   },
+   "cost_per_question_usd": {
+    "mean": 0.00695695,
+    "min": 0.00695695,
+    "max": 0.00695695
+   },
+   "errors": {
+    "mean": 0.0,
+    "min": 0,
+    "max": 0
+   },
+   "crit_failed": [
+    "F02",
+    "F05",
+    "F08"
+   ]
+  },
+  "no_verify": {
+   "runs": 1,
+   "n": 100,
+   "citation_hit": {
+    "mean": 0.9156626506024096,
+    "min": 0.9156626506024096,
+    "max": 0.9156626506024096
+   },
+   "cited_on_gold_share": {
+    "mean": 0.9177489177489176,
+    "min": 0.9177489177489176,
+    "max": 0.9177489177489176
+   },
+   "correct_refusal": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "false_refusal": {
+    "mean": 0.07228915662650602,
+    "min": 0.07228915662650602,
+    "max": 0.07228915662650602
+   },
+   "invented_on_refusal": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "status_ok": {
+    "mean": 0.8,
+    "min": 0.8,
+    "max": 0.8
+   },
+   "differing_shown": {
+    "mean": 0.4666666666666667,
+    "min": 0.4666666666666667,
+    "max": 0.4666666666666667
+   },
+   "premise_caught": {
+    "mean": 0.7,
+    "min": 0.7,
+    "max": 0.7
+   },
+   "referral": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   },
+   "critical_pass": {
+    "mean": 0.8,
+    "min": 0.8,
+    "max": 0.8
+   },
+   "unverified_shown_share": {
+    "mean": 0.07333333333333333,
+    "min": 0.07333333333333333,
+    "max": 0.07333333333333333
+   },
+   "dropped_share": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "latency_median_s": {
+    "mean": 13.6,
+    "min": 13.6,
+    "max": 13.6
+   },
+   "latency_p95_s": {
+    "mean": 35.8,
+    "min": 35.8,
+    "max": 35.8
+   },
+   "cost_per_question_usd": {
+    "mean": 0.00695695,
+    "min": 0.00695695,
+    "max": 0.00695695
+   },
+   "errors": {
+    "mean": 0.0,
+    "min": 0,
+    "max": 0
+   },
+   "crit_failed": [
+    "F02",
+    "F08"
+   ]
+  }
+ }
+}

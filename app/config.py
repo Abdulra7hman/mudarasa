@@ -40,6 +40,9 @@ MODEL_JUDGE = env("MODEL_JUDGE", "gpt-5.4-mini")
 MODEL_ANSWER_FALLBACK = env("MODEL_ANSWER_FALLBACK", "")  # second deployment if the first fails
 EFFORT_ANSWER = env("EFFORT_ANSWER", "low")
 EFFORT_JUDGE = env("EFFORT_JUDGE", "low")
+# the answer depth the student picks can also set the answer model's reasoning effort, e.g. "short:low"
+# (twice as fast, but on the test set low effort invented content in 7% of out-of-library items: off by default)
+EFFORT_BY_DEPTH = dict(x.split(":") for x in env("EFFORT_BY_DEPTH", "").split(",") if ":" in x)
 EFFORT_GATE = env("EFFORT_GATE", "minimal")          # the scope check is a short classification
 PARALLEL_GATE = flag("PARALLEL_GATE", True)          # run the scope check alongside search + answer
 EVIDENCE_FIRST = flag("EVIDENCE_FIRST", True)        # the model lists evidence before writing sentences (slower, prep v2)
