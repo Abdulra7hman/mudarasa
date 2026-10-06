@@ -439,8 +439,13 @@ P.renderVals = function(){
   v.pgBack = () => { const st = this.state, V2 = this.__view(st.srcId); if (!V2) return; this.__focus = null;
     this.setState({rdFree:false, rpage: st.cur >= 0 ? pageOf(this.__pages(V2), st.cur) : st.rpage}); scrollToWord(st.cur, 'center'); };
   v.ctxOpts = (v.ctxOpts || []).slice(0, 1);   // questions are answered from the Zad family only
+  // listening speed up to 2x, in the player and in the settings
+  const SPEEDS = [0.75, 1, 1.25, 1.5, 2], sp = s.speed || 1;
+  v.speeds = SPEEDS.map(x => ({label: x + '×', set: () => { this.setState({speed: x}); if (this.state.playing) this.startPlay(this.state.cur, x); },
+    bd: sp === x ? 'var(--color-accent)' : 'var(--color-divider)', fg: sp === x ? 'var(--color-accent-800)' : 'var(--color-neutral-700)'}));
+  v.optSpeed = SPEEDS.map(x => ({label: x + '×', pick: () => this.setState({speed: x}), ...chip(sp === x)}));
   v.rdTitleFs = s.rdStuck ? '24px' : '40px'; v.rdMetaDisp = s.rdStuck ? 'none' : 'inline'; v.rdShadow = s.rdStuck ? '0 1px 0 var(--color-divider)' : 'none';
-  const hoverOn = (s.set || {}).hoverMean !== false;
+  const hoverOn = (s.set || {}).hoverMean === true;   // off by default; switched on in the settings
   v.tgHoverMean = {bd: hoverOn ? 'var(--color-accent)' : 'var(--color-divider)', bg: hoverOn ? 'var(--color-accent)' : 'var(--color-neutral-200)', knob: hoverOn ? 'var(--color-bg)' : 'var(--color-neutral-500)', x: hoverOn ? '22px' : '2px'};
   v.setHoverMean = () => this.setState({set: {...this.state.set, hoverMean: !hoverOn}});
   if (!hoverOn) (v.paras || []).forEach(p => (p.words || []).forEach(w => { w.enter = () => {}; if (w.title) w.title = w.title.replace(' · قف عليها ثلاث ثوانٍ لمعناها', ''); }));

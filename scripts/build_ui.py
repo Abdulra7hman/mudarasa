@@ -236,7 +236,7 @@ def main():
               '<span style="position:absolute;top:2px;width:18px;height:18px;border-radius:50%;background:{{ tgHoverMean.knob }};transition:all .2s;inset-inline-start:{{ tgHoverMean.x }}"></span></button>')
     hover_row = ('<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--color-divider);flex-wrap:wrap">'
                  '<div style="display:flex;flex-direction:column;gap:2px;min-width:200px;flex:1"><span style="font-weight:700;font-size:15px">المعنى عند الوقوف على الكلمة</span>'
-                 '<span style="font-size:12px;color:var(--color-neutral-700)">في وضع الاستماع: قف على كلمة ثلاث ثوانٍ فيظهر معناها. أطفئه إن كان يظهر وأنت لا تريده</span></div>'
+                 '<span style="font-size:12px;color:var(--color-neutral-700)">شغّله ليظهر معنى الكلمة إذا وقفت عليها ثلاث ثوانٍ في وضع الاستماع (مطفأ في الأصل)</span></div>'
                  + toggle + '</div>\n            ')
     tpl = tpl[:row] + new_row + hover_row + tpl[row:]
     # 8) flashcards: a page to make a deck with several cards; "add cards" inside an open deck
