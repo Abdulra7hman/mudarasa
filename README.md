@@ -3,7 +3,7 @@
 **ادرس «الروض المربع» مع شروحه، وكل جملة بنصها وصفحتها.**
 *Study al-Rawd al-Murbi' with its commentaries: every sentence comes with its text and page.*
 
-العرض الحي (Live demo): _يُضاف بعد النشر_ · المسار: تحدي الذكاء الاصطناعي في خدمة المحتوى الإسلامي ٢٠٢٦، المسار الرابع
+العرض الحي (Live demo): https://mudarasa.azurewebsites.net · المسار: تحدي الذكاء الاصطناعي في خدمة المحتوى الإسلامي ٢٠٢٦، المسار الرابع
 
 ---
 
@@ -28,6 +28,10 @@
 - التخريج كما نصّ عليه المصدر، مع رابط للبحث في الدرر السنية.
 - مراجعة متباعدة للبطاقات.
 - دفتر يُصدَّر بمراجعه.
+
+### الواجهة: ما الحقيقي وما التوضيحي
+- **حقيقي يعمل على الكتب:** الكتب الأربعة من عائلة «الزاد» في الأبواب الثلاثة (القراءة، والفهرس، والاستماع، والمعاني، والتخريج)، والمحادثة الموثقة، وتسميع متن الزاد، وملخصات الأبواب.
+- **بيانات توضيحية لعرض النظام كاملًا:** بقية كتب المكتبة، والإحصاءات والتحليلات، والبطاقات والتقييدات المعدّة مسبقًا، وسجل المحادثات الأولي. ما لم يُبنَ بعد يظهر عليه «ضمن الإصدارات القادمة».
 
 ### ما تم وما بقي
 | تم | التالي |
@@ -57,7 +61,7 @@
 data/books (Turath JSON, server only) ─► app/ingest.py ─► data/build/study.json  (paragraphs, linked notes, editions)
                                                      └─► app/retrieval.py   (BM25 + embeddings, reciprocal-rank fusion)
 question ─► scope gate (mini model) ─► retrieval ─► evidence-first answer (main model) ─► quote check ─► support judge (mini)
-         ─► evidence status ─► FastAPI ─► web/ (RTL, no build step)
+         ─► evidence status ─► FastAPI ─► web/index.html (the team's design, connected by scripts/build_ui.py)
 ```
 | Part | What it uses |
 |---|---|
@@ -65,6 +69,15 @@ question ─► scope gate (mini model) ─► retrieval ─► evidence-first a
 | Fallback | If the model is unreachable, search-only mode: the cited passages, with no generated answer |
 | Speech | Azure AI Speech |
 | Hosting | Azure App Service |
+
+### The interface: what is real, what is illustrative
+The interface is the team's design (`design/madarasa.html`, exported from Claude Design). `python -m scripts.build_ui` writes
+`web/index.html`: the design unchanged, plus integration code that connects it to the backend.
+- **Real, on the books:** the four Zad-family books in the three chapters (reading with a table of contents, listening from any
+  word, word meanings, takhrij from footnote numbers), the cited chat, Zad matn recitation, and chapter summaries.
+- **Illustrative data, to show the whole system:** the rest of the library, statistics and insights, the prepared cards and
+  notes, and the starting chat history. Parts not built yet open a "coming in a later release" notice.
+- The earlier interface is kept at `/v2`.
 
 ### Run it
 ```bash
@@ -75,7 +88,8 @@ cp .env.example .env         # fill in the Azure keys
 make test                    # unit tests (linking, pipeline rules, recitation matching)
 make run                     # http://127.0.0.1:8000
 ```
-Optional builds: `python -m scripts.build_tools` (study tools), `python -m scripts.build_tts` (recordings).
+Optional builds: `python -m scripts.build_tools` (study tools), `python -m scripts.build_tts` (recordings),
+`python -m scripts.build_ui` (the interface, from `design/madarasa.html`).
 
 ### Evaluate it
 ```bash
