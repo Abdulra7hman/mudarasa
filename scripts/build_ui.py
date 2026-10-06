@@ -256,7 +256,8 @@ def main():
     assert i > 0 and j > i
     tpl = tpl[:j] + "\n" + js + tpl[j:]
     # 10) page title, icon and the Norsal font
-    icon = '<link rel="icon" type="image/png" href="/img/icon-64.png"><link rel="apple-touch-icon" href="/img/icon-180.png">'
+    icon = ('<link rel="icon" type="image/svg+xml" href="/img/icon.svg"><link rel="icon" type="image/png" sizes="64x64" href="/img/icon-64.png">'
+            '<link rel="apple-touch-icon" href="/img/icon-180.png">')   # the approved mark (logo sheet 4d)
     fonts = FONT_FACES if (ROOT / "web" / "fonts" / "Norsal-Bold.otf").exists() else ""
     assert "<head>" in tpl
     tpl = tpl.replace("<head>", "<head>" + icon + fonts, 1).replace("<title>في الهرم</title>", "<title>" + TITLE + "</title>")
