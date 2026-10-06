@@ -165,6 +165,9 @@
       pop.querySelectorAll("[data-nb]").forEach(b => b.onclick = () => { const e = items[+b.dataset.nb]; NB.add({type: "معنى كلمة", title: `معنى «${STRIP(word)}»`, body: e.definition, cites: [{book: e.source, vol: e.vol, page: e.page, link: e.link}]}); });
       pop.querySelector("[data-ask]").onclick = () => { pop.remove(); MD.state.askPara = {id: p.id, text: p.text, page: p.page}; MD.state.pendingQ = `ما معنى «${STRIP(word)}» في هذه الفقرة؟`; location.hash = "#/ask"; };
     }
+    // a pending question (from the word popover) is asked when the ask view opens
+    const _ask = MD.routes.ask;
+    MD.routes.ask = async a => { await _ask(a); if (MD.state.pendingQ) { const q = MD.state.pendingQ; MD.state.pendingQ = null; document.querySelector("#q").value = q; document.querySelector("#f").requestSubmit(); } };
 
     /* ================= listen ================= */
     const LIG = {"ﷺ": "صلى الله عليه وسلم", "﵇": "عليه السلام", "﵀": "رحمه الله", "﵁": "رضي الله عنه", "﵂": "رضي الله عنها", "﵃": "رضي الله عنهم", "﵄": "رضي الله عنهما"};
@@ -297,8 +300,6 @@
         };
         const finish = () => {
           const l = d.lines[li], ok = state.st.filter(s => s === "ok").length, bad = l.words.filter((w, k) => state.st[k] === "wrong" || state.st[k] === "skip");
-          const best = MD.store.get("recite_best", {}), key = cid + ":" + li; best[key] = Math.max(best[key] || 0, ok / l.words.length); MD.store.set("recite_best", best);
-          if (MD.act) MD.act.bump("lines");
           v.querySelector("#result").innerHTML = `النتيجة: ${dg(ok)} من ${dg(l.words.length)} صحيحة${bad.length ? ` · الأخطاء: ${bad.map(w => esc(w.plain)).join("، ")}` : ""}
             ${bad.length && F.srs ? ` <button class="btn small" id="toSrs">أضف الأخطاء إلى المراجعة</button>` : ""}`;
           const b = v.querySelector("#toSrs");

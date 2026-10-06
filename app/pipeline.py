@@ -67,7 +67,7 @@ def _gate(question, provider):
     return scope, st
 
 
-def answer(question, para=None, retrieval=True, verify=True, provider=None, k=None, events=None):
+def answer(question, para=None, retrieval=True, verify=True, provider=None, k=None, events=None, depth="medium"):
     """events(kind, payload): optional progress callback ("stage", name) / ("passages", list), used for streaming."""
     t0, calls = time.time(), []
     k = k or C.RETRIEVE_K
@@ -118,20 +118,18 @@ def answer(question, para=None, retrieval=True, verify=True, provider=None, k=No
     emit("stage", "write")
     ctx = "\n\n".join(f"[P{i}] {p['book']}، ج{p['vol']} ص{p['page']} ({p['kind']}):\n{p['text']}" for i, p in enumerate(shown, 1))
     rules, schema = (P.RULES_V2, P.SCHEMA_ANSWER) if C.EVIDENCE_FIRST else (P.RULES_FAST, P.SCHEMA_ANSWER_FAST)
-    system = rules + (P.GENERAL_MODE if personal else "")
+    system = rules + (P.GENERAL_MODE if personal else "") + P.DEPTH.get(depth or "medium", "")
+    answer_future = _POOL.submit(llm.ask, system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", schema, role="answer", provider=provider)
+    if gate_result() in P.REFUSALS:  # the scope check finished first and says: refuse now (the answer is discarded)
+        return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
     try:
-        ans, st = llm.ask(system, f"النصوص:\n{ctx}\n\nالسؤال: {question}", schema, role="answer", provider=provider)
+        ans, st = answer_future.result()
     except Exception as e:
         if "content management policy" not in str(e) and "content_filter" not in str(e):
             raise
-        gate_result()
-        if scope in P.REFUSALS:
-            return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
         return done(status="not_found", message=P.FILTERED, sentences=[], dropped=[], raw_sentences=[], passages=passages,
                     filtered=True, model_status=None)
     calls.append({"step": "answer", **st})
-    if gate_result() in P.REFUSALS:  # the parallel scope check says: refuse, and discard the answer
-        return done(status="not_found", message=P.REFUSALS[scope], sentences=[], dropped=[], raw_sentences=[], passages=[])
     personal = scope == "personal_fatwa"
 
     checked = []

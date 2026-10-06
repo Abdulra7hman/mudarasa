@@ -105,13 +105,14 @@ async def _question(request: Request):
     q = (body.get("question") or "").strip()[:500]
     if not q:
         raise HTTPException(400, "اكتب سؤالًا")
+    request.state.depth = body.get("depth") if body.get("depth") in ("short", "medium", "long") else "medium"
     return q, body.get("para") or None
 
 
-def _run(q, para, events=None):
+def _run(q, para, events=None, depth="medium"):
     """The pipeline, or search-only mode when the model is unreachable."""
     try:
-        return pipeline.answer(q, para=para, events=events)
+        return pipeline.answer(q, para=para, events=events, depth=depth)
     except Exception as e:  # model outage: show the cited passages only (search-only mode)
         try:
             shown = pipeline.retriever().search(q, para=para)
@@ -141,12 +142,13 @@ def _finish(q, para, key, res):
 @app.post("/api/ask")
 async def ask(request: Request):
     q, para = await _question(request)
-    key = normalise(q) + "|" + (para or "")
+    depth = request.state.depth
+    key = normalise(q) + "|" + (para or "") + ("" if depth == "medium" else "|" + depth)
     if _cached(key):
         res = {**_cache[key], "cached": True}
     else:
         _limit(request)
-        res = await asyncio.get_running_loop().run_in_executor(None, _run, q, para)
+        res = await asyncio.get_running_loop().run_in_executor(None, lambda: _run(q, para, depth=depth))
     return JSONResponse(_finish(q, para, key, res))
 
 
@@ -154,14 +156,15 @@ async def ask(request: Request):
 async def ask_stream(request: Request):
     """Server-sent events: stage changes and the passages as soon as they are found, then the checked answer."""
     q, para = await _question(request)
-    key = normalise(q) + "|" + (para or "")
+    depth = request.state.depth
+    key = normalise(q) + "|" + (para or "") + ("" if depth == "medium" else "|" + depth)
     cached = _cached(key)
     if not cached:
         _limit(request)
     events = queue.Queue()
 
     def work():
-        res = {**cached, "cached": True} if cached else _run(q, para, events=lambda kind, payload: events.put((kind, payload)))
+        res = {**cached, "cached": True} if cached else _run(q, para, events=lambda kind, payload: events.put((kind, payload)), depth=depth)
         events.put(("result", _finish(q, para, key, res)))
         events.put(None)
 
