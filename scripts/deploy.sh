@@ -22,7 +22,8 @@ fi
 SETTINGS=$(grep -E '^[A-Z_]+=.+' .env | grep -v -E '^(OLLAMA_|GITHUB_MODELS_TOKEN)' | tr '\n' ' ')
 az webapp config appsettings set -n "$APP" -g "$RG" -o none --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true WEBSITES_PORT=8000 $SETTINGS
 
-if [ "${CODE_ONLY:-0}" = "1" ]; then  # quick redeploy: code and web only, keep the data already on the server
+# NOTE: App Service builds and runs a fresh copy of each upload, so every deploy must include the data (no code-only mode).
+if false; then
   rm -f deploy.zip && zip -qr deploy.zip app web requirements.txt -x '*/__pycache__/*'
   az webapp deploy -n "$APP" -g "$RG" --src-path deploy.zip --type zip --clean false -o none || true
   echo "https://$APP.azurewebsites.net"; exit 0
