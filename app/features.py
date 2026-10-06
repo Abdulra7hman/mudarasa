@@ -179,6 +179,22 @@ def matn_lines(study, cid, min_words=6, max_words=14):
 _token = {"t": 0, "v": None}
 
 
+def mentions(word, quote):
+    """A meaning's quote must be about this word: it contains the word's stem (prefixes and common endings removed).
+    Without this, a passage defining a neighbouring word (e.g. «كتاب» for «بنو») could be shown as the word's meaning."""
+    w = normalise(word)
+    for pre in ("وال", "فال", "بال", "كال", "لل", "ال", "و", "ف", "ب", "ل", "ك"):
+        if w.startswith(pre) and len(w) - len(pre) >= 3:
+            w = w[len(pre):]
+            break
+    for suf in ("ات", "ون", "ين", "ان", "ه", "ة"):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            w = w[:-len(suf)]
+            break
+    q = normalise(quote)
+    return bool(w) and (w in q or (len(w) >= 4 and w[:3] in q))
+
+
 def register(app, study):
     gl = Glossary(study) if C.FEATURES["word"] else None
     tools_dir = B.DATA / "tools"
@@ -195,6 +211,49 @@ def register(app, study):
         if not gl:
             raise HTTPException(404, "not found")
         return {"word": w, "stop": normalise(w) in STOP, "items": gl.lookup(w[:40], para)}
+
+    _meanings = {}
+
+    @app.get("/api/meaning")
+    def meaning(w: str, ctx: str = ""):
+        """Lexical, shar'i and contextual meaning of a word, generated ONLY from library passages (RAG) and quote-checked.
+        Each meaning carries its book and page; a meaning whose quote is not found in its passage is withheld."""
+        from . import llm
+        from .pipeline import retriever
+        word = re.sub(r"[^\u0621-\u064A\u064B-\u0652 ]", "", w)[:40].strip()
+        if not word or normalise(word) in STOP:
+            return {"word": w, "items": [], "stop": True}
+        key = (normalise(word), normalise(ctx)[:120])
+        if key in _meanings:
+            return _meanings[key]
+        found = gl.lookup(word) if gl else []
+        passages = retriever().search(f"معنى {word} لغة واصطلاحا {ctx[:200]}", k=8)
+        pool = [{"book": e["source"], "vol": e["vol"], "page": e["page"], "link": e["link"], "text": f"{e['word']}: {e['definition']}"} for e in found[:4]]
+        pool += [{"book": p["book"], "vol": p["vol"], "page": p["page"], "link": p["link"], "text": p["text"]} for p in passages]
+        listing = "\n\n".join(f"[P{i}] {p['book']}، ج{p['vol']} ص{p['page']}:\n{p['text'][:1200]}" for i, p in enumerate(pool, 1))
+        item = {"type": "object", "properties": {"text": {"type": "string"}, "passage": {"type": "string"}, "quote": {"type": "string"}}}
+        schema = {"type": "object", "properties": {"lugha": item, "shar": item, "siyaq": item}}
+        rules = (f"اشرح كلمة «{word}» لطالب يدرس «الروض المربع» من النصوص المعطاة فقط. لكل من: lugha (معناها في اللغة)، shar (معناها في الاصطلاح الشرعي أو الفقهي)، "
+                 "siyaq (مرادها في سياق العبارة المعطاة): اكتب text في جملة قصيرة، ورقم المقطع passage مثل P2، واقتباسًا حرفيًّا quote من ذلك المقطع يدل عليه. "
+                 f"كل معنى يجب أن يكون معنى «{word}» نفسها، والاقتباس يجب أن يذكر الكلمة أو مادتها؛ لا تنقل تعريف كلمة أخرى وردت في المقطع. "
+                 "إن لم تجد في النصوص ما يدل على أحدها فاترك text فارغًا. لا تضف شيئًا من معرفتك.")
+        try:
+            ans, _ = llm.ask(rules, f"العبارة التي وردت فيها الكلمة: {ctx[:400]}\n\nالنصوص:\n{listing}", schema, role="judge", max_out=4000)
+        except Exception:
+            ans = {}
+        out = []
+        for k, label in (("lugha", "في اللغة"), ("shar", "في الاصطلاح"), ("siyaq", "في السياق")):
+            x = (ans or {}).get(k) or {}
+            digits = re.findall(r"\d+", str(x.get("passage", "")))
+            p = pool[int(digits[0]) - 1] if digits and 0 < int(digits[0]) <= len(pool) else None
+            ok = bool(p and x.get("text") and x.get("quote") and normalise(x["quote"]) in normalise(p["text"]) and mentions(word, x["quote"]))
+            out.append({"kind": label, "text": x.get("text", "") if ok else "", "book": p["book"] if ok else None,
+                        "vol": p["vol"] if ok else None, "page": p["page"] if ok else None, "link": p["link"] if ok else None,
+                        "quote": x.get("quote") if ok else None})
+        res = {"word": word, "items": out}
+        if any(o["text"] for o in out):
+            _meanings[key] = res
+        return res
 
     @app.get("/api/matn/{cid}")
     def matn(cid: str):

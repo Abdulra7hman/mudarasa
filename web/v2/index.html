@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مدارسة</title>
+<meta name="description" content="مدارسة: رفيق طالب العلم الشرعي. الروض المربع وشروحه، وكل جملة بنصها وصفحتها">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%231a1e38%22/%3E%3Ctext x=%2216%22 y=%2223%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22%3E%D9%85%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<div class="wm" aria-hidden="true"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 70 C200 20 360 110 600 60 S1000 10 1200 60"/><path d="M0 85 C240 40 400 120 620 75 S980 30 1200 80"/></svg><div class="word">مدارسة</div></div>
+
+<div class="welcome hidden" id="welcome">
+  <div class="box">
+    <div class="logo">مدارسة</div>
+    <div class="tagline">رفيق طالب العلم الشرعي</div>
+    <form id="wf"><label for="wname">اسمك</label><input id="wname" placeholder="مثلًا: عبدالرحمن" autocomplete="nickname" maxlength="40">
+    <button class="go">ابدأ</button></form>
+    <div class="meta" style="margin-top:10px">لا حساب ولا كلمة مرور: يُحفظ الاسم في متصفحك فقط.</div>
+    <div class="links"><a href="#/about" data-wl>عن مدارسة</a>|<a href="#/contact" data-wl>للتواصل</a></div>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="side" id="side">
+    <a class="logo" href="#/home">مدارسة</a>
+    <div class="tagline">رفيق طالب العلم الشرعي</div>
+    <hr>
+    <div class="group">مساحتي</div>
+    <nav class="nav" id="nav" aria-label="الأقسام"></nav>
+    <div class="bottom">
+      <a href="#/about">عن مدارسة</a>
+      <a href="#/contact">للتواصل</a>
+      <a href="#" class="exit" id="logout">تسجيل الخروج</a>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="ib burger" id="burger" aria-label="القائمة"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="user"><div class="av" id="av">ع</div><span class="name" id="uname"></span></div>
+      <h1 id="title">مدارسة</h1>
+      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="gsearch" placeholder="اسأل أو ابحث في الروض المربع وشروحه…" aria-label="بحث"></div>
+      <div class="tools" role="group" aria-label="إعدادات العرض">
+        <button class="ib" id="fsDown" title="تصغير الخط" aria-label="تصغير الخط">أ−</button>
+        <button class="ib" id="fsUp" title="تكبير الخط" aria-label="تكبير الخط">أ+</button>
+        <button class="ib" id="tashkeel" title="التشكيل" aria-pressed="true">حَ</button>
+        <button class="ib" id="theme" title="الوضع الليلي" aria-label="الوضع الليلي"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+      </div>
+    </header>
+    <div class="notice" id="disclosure" style="margin:14px 28px 0"></div>
+    <main id="view" aria-live="polite"></main>
+  </div>
+</div>
+<script src="../js/app.js"></script>
+<script src="../js/features.js" defer></script>
+</body>
+</html>
