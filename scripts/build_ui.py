@@ -38,12 +38,27 @@ CITES_MARKUP = """
                     <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px">
                       <span style="border:1px solid {{ m.stColor }};color:{{ m.stColor }};border-radius:999px;padding:1px 10px;font-weight:600">{{ m.status }}</span>
                       <sc-for list="{{ m.cites }}" as="c">
-                        <span style="display:inline-flex;align-items:stretch;border:1px solid var(--color-accent-300);background:var(--color-accent-100);border-radius:6px;overflow:hidden">
-                          <button sc-camel-on-click="{{ c.open }}" title="{{ c.quote }}" style="border:0;background:transparent;font:inherit;font-size:12.5px;color:var(--color-accent-800);padding:1px 8px;cursor:pointer">({{ c.n }}) {{ c.label }}</button>
+                        <span style="display:inline-flex;align-items:stretch;border:1px solid {{ c.bd }};background:{{ c.bg }};border-radius:6px;overflow:hidden">
+                          <button sc-camel-on-click="{{ c.open }}" title="اعرض النص من الكتاب" style="border:0;background:transparent;font:inherit;font-size:12.5px;color:var(--color-accent-800);padding:1px 8px;cursor:pointer">({{ c.n }}) {{ c.label }}</button>
                           <a href="{{ c.link }}" target="_blank" rel="noopener" title="افتح الصفحة في تراث" style="text-decoration:none;color:var(--color-accent-700);padding:1px 6px;border-inline-start:1px solid var(--color-accent-300)">↗</a>
                         </span>
                       </sc-for>
                     </div>
+                    <sc-if value="{{ m.hasPv }}" hint-placeholder-val="{{ false }}">
+                      <div data-cite-card="1" style="display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-4) var(--space-5);border:1px solid var(--color-divider);border-inline-start:3px solid var(--color-accent);border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+                        <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+                          <span style="font-weight:700;font-size:14px;color:var(--color-accent-800)">{{ m.pv.book }}</span>
+                          <span style="font-size:12px;color:var(--color-neutral-700)">{{ m.pv.where }}</span>
+                          <button sc-camel-on-click="{{ m.pv.close }}" title="إغلاق" style="margin-inline-start:auto;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--color-divider);border-radius:var(--radius-md);background:transparent;color:var(--color-neutral-700);cursor:pointer;font:inherit;font-size:16px;line-height:1">×</button>
+                        </div>
+                        <p style="margin:0;font-family:'Norsal','IBM Plex Sans Arabic',sans-serif;font-size:19px;line-height:2.1;text-align:justify;color:var(--color-text)"><sc-for list="{{ m.pv.parts }}" as="pt"><span style="{{ pt.css }}">{{ pt.t }}</span></sc-for></p>
+                        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
+                          <sc-if value="{{ m.pv.inApp }}" hint-placeholder-val="{{ true }}"><button class="btn btn-secondary" sc-camel-on-click="{{ m.pv.read }}" style="font-size:13px">اقرأ في الكتاب</button></sc-if>
+                          <a href="{{ m.pv.link }}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-accent-800)">افتح الصفحة في تراث ↗</a>
+                          <span style="font-size:12px;color:var(--color-neutral-600);margin-inline-start:auto">{{ m.pv.note }}</span>
+                        </div>
+                      </div>
+                    </sc-if>
                     <span style="font-size:12px;color:var(--color-neutral-600)">{{ m.onlyNote }}</span>
                     <sc-if value="{{ m.hasDropped }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:oklch(0.55 0.15 30)">{{ m.droppedNote }}</span></sc-if>
                   </sc-if>"""
@@ -181,6 +196,23 @@ def main():
     a = tpl.find('title="{{ bmBtnTitle }}"'); b = tpl.find("علامة</button>", a)
     assert 0 < b - a < 1500
     tpl = tpl[:b] + "{{ bmBtnLabel }}</button>" + tpl[b + len("علامة</button>"):]
+    # 5b) the reader's header (title, listening / meanings, bookmark) stays at the top while the book scrolls;
+    #     the table of contents and the text card leave room for it
+    r0 = tpl.find('<sc-if value="{{ isReader }}"')
+    head = '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">'
+    h = tpl.find(head, r0); assert 0 < h - r0 < 600, h - r0
+    tpl = tpl[:h] + ('<div style="position:sticky;top:0;z-index:6;background:var(--color-bg);padding-block:var(--space-3);margin-block:calc(-1 * var(--space-3));'
+                     'box-shadow:{{ rdShadow }};transition:box-shadow .2s;display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">') + tpl[h + len(head):]
+    tpl = once(tpl, '<span style="font-size:13px;color:var(--color-accent-700)">{{ src.art }} · {{ src.author }}</span>',
+               '<span style="font-size:13px;color:var(--color-accent-700);display:{{ rdMetaDisp }}">{{ src.art }} · {{ src.author }}</span>', "reader meta")
+    tpl = once(tpl, "font-weight:700;font-size:40px;line-height:1.3\">{{ src.name }}</h1>",
+               "font-weight:700;font-size:{{ rdTitleFs }};line-height:1.3;transition:font-size .2s\">{{ src.name }}</h1>", "reader title")
+    toc = 'position:sticky;top:var(--space-4);max-height:calc(100vh - 160px)'
+    t0 = tpl.find(toc, r0); assert t0 > 0
+    tpl = tpl[:t0] + 'position:sticky;top:96px;max-height:calc(100vh - 250px)' + tpl[t0 + len(toc):]
+    card = '<div style="border:1px solid var(--color-divider);border-radius:var(--radius-lg);padding:var(--space-8);background:var(--color-surface);box-shadow:var(--shadow-sm)">'
+    c0 = tpl.find(card, r0); assert c0 > 0
+    tpl = tpl[:c0] + card.replace('box-shadow:var(--shadow-sm)', 'box-shadow:var(--shadow-sm);scroll-margin-top:110px') + tpl[c0 + len(card):]
     # 6) select text in the reader -> notes with a comment
     a = tpl.find('<sc-if value="{{ isReader }}"'); b = tpl.find(">", tpl.find("<div", a)) + 1
     assert a > 0 and b > a

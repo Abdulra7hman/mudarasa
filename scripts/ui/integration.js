@@ -161,8 +161,14 @@ P.componentDidMount = function(){
   if (!window.__mdDigits) { window.__mdDigits = true; startDigits(); }
   if (!window.__mdSel) { window.__mdSel = true;
     document.addEventListener('mouseup', e => setTimeout(() => this.__onSelect(e), 0));
-    document.addEventListener('scroll', () => { if (this.state.selChip) this.setState({selChip:null}); }, true); }
+    document.addEventListener('scroll', e => {
+      const s = this.state; if (s.selChip) this.setState({selChip:null});
+      if (s.screen !== 'sources' || s.srcView !== 'reader') return;
+      const el = e.target && e.target.nodeType === 1 ? e.target : document.scrollingElement, stuck = !!el && el.scrollTop > 60;
+      if (stuck !== !!s.rdStuck) this.setState({rdStuck: stuck}); }, true); }
 };
+const _go = P.go;
+P.go = function(screen, extra){ return _go.call(this, screen, {rdStuck:false, ...(extra || {})}); };
 const _stop = P.stopTimers;
 P.stopTimers = function(){
   const s = this.state || {}, V = this.__view && this.__view(s.srcId);
@@ -332,6 +338,21 @@ P.__findQuote = function(src, quote){
   }
   return best && best.score >= 0.6 ? best : null;
 };
+const HL_CSS = 'background:color-mix(in srgb,var(--color-accent) 26%,transparent);border-radius:4px;padding:1px 2px';
+P.__citePreview = function(c){   // the cited passage with about 40 words around it, the quote highlighted
+  this.__pvCache = this.__pvCache || new Map();
+  const key = c.book_id + '|' + c.quote; if (this.__pvCache.has(key)) return this.__pvCache.get(key);
+  const m = CITE_SRC[c.book_id], hit = m && this.__R ? this.__findQuote(m[0], c.quote) : null;
+  let pv;
+  if (hit) {
+    const V = this.__viewFor(m[0], hit.ch), words = V.paras.flatMap(p => SPLIT(p.text));
+    const a0 = Math.max(0, hit.a - 40), b1 = Math.min(words.length, hit.b + 41);
+    pv = {inApp: true, where: 'كتاب الطهارة · ' + chName(hit.ch), note: m[0] === 'zad' && c.book_id === 1679 ? 'النص من طبعة ركائز المشكولة للكتاب نفسه' : '',
+      parts: [{t: (a0 > 0 ? '… ' : '') + words.slice(a0, hit.a).join(' ') + ' ', css: ''}, {t: words.slice(hit.a, hit.b + 1).join(' '), css: HL_CSS},
+              {t: ' ' + words.slice(hit.b + 1, b1).join(' ') + (b1 < words.length ? ' …' : ''), css: ''}]};
+  } else pv = {inApp: false, where: 'الاقتباس كما في الصفحة', note: '', parts: [{t: '«' + String(c.quote || '').trim() + '»', css: HL_CSS}]};
+  this.__pvCache.set(key, pv); return pv;
+};
 P.__openCite = function(c){
   const m = CITE_SRC[c.book_id], hit = m && this.__R ? this.__findQuote(m[0], c.quote) : null;
   if (!hit) { window.open(c.link, '_blank', 'noopener'); return; }
@@ -381,6 +402,7 @@ P.renderVals = function(){
   const paged = this.__paged();
   // settings: how the reader shows the text
   v.optReadMode = [['pages','صفحات'],['scroll','تمرير متصل']].map(([k, l]) => ({label:l, pick:() => this.setState({set:{...this.state.set, readMode:k}, rpage:0}), ...chip((paged ? 'pages' : 'scroll') === k)}));
+  v.rdTitleFs = s.rdStuck ? '24px' : '40px'; v.rdMetaDisp = s.rdStuck ? 'none' : 'inline'; v.rdShadow = s.rdStuck ? '0 1px 0 var(--color-divider)' : 'none';
   v.pgShow = false; v.pgLabel = ''; v.pgPrevLabel = 'السابق'; v.pgNextLabel = 'التالي'; v.pgPrevOp = '1'; v.pgNextOp = '1'; v.pgPrev = () => {}; v.pgNext = () => {};
   v.bmBtnLabel = 'علامة'; v.bmBtnTitle = 'ضع علامة عند كلمة'; v.bmBtnBg = ''; v.bmBtnBd = '';
   if (real) {
@@ -489,15 +511,22 @@ P.renderVals = function(){
   const focus = s.mode === 'recite' ? (s.recOn ? s.pos : null) : (s.playing ? s.cur : null);
   if (focus != null && focus >= 0 && focus !== this.__focus) { this.__focus = focus;
     requestAnimationFrame(() => { const el = document.querySelector('[data-wi="' + focus + '"]'); if (!el) return; const r = el.getBoundingClientRect();
-      if (r.top < 100 || r.bottom > innerHeight * 0.6) el.scrollIntoView({block:'center', behavior:'smooth'}); }); }
+      if (r.top < 190 || r.bottom > innerHeight * 0.6) el.scrollIntoView({block:'center', behavior:'smooth'}); }); }
   // chat turns: stage while waiting, image, citations (each opens the book at the quote) and evidence status
   if (Array.isArray(v.turns)) v.turns = v.turns.map((t, i) => { const m = this.state.msgs[i] || {};
     if (m.pending) t = {...t, a: STAGE_TEXT[m.stage] || t.a};
     const done = !m.pending && m.status && (m.shown == null || m.shown >= String(m.a || '').split(' ').length);
-    return {...t, hasImg: !!m.img, imgKey: m.img ? 'm' + m.id : '', hasCites: !!done, cites: (m.cites || []).map(c => ({...c, open: () => this.__openCite(c)})),
+    const pvOpen = done && s.cpv && s.cpv.mid === m.id && (m.cites || [])[s.cpv.k], pvc = pvOpen ? m.cites[s.cpv.k] : null, pv = pvc ? this.__citePreview(pvc) : null;
+    return {...t, hasImg: !!m.img, imgKey: m.img ? 'm' + m.id : '', hasCites: !!done,
+            cites: (m.cites || []).map((c, k) => { const on = !!(s.cpv && s.cpv.mid === m.id && s.cpv.k === k);
+              return {...c, bg: on ? 'var(--color-accent-300)' : 'var(--color-accent-100)', bd: on ? 'var(--color-accent)' : 'var(--color-accent-300)',
+                open: () => { this.setState(st => ({cpv: st.cpv && st.cpv.mid === m.id && st.cpv.k === k ? null : {mid: m.id, k}}));
+                  setTimeout(() => { const el = document.querySelector('[data-cite-card]'); if (el) el.scrollIntoView({block:'nearest', behavior:'smooth'}); }, 80); }}; }),
+            hasPv: !!pv, pv: pv ? {book: pvc.label, where: pv.where, parts: pv.parts, inApp: pv.inApp, link: pvc.link, note: pv.note,
+              close: () => this.setState({cpv:null}), read: () => this.__openCite(pvc)} : {parts:[]},
             status: m.status_ar || '', stColor: STATUS_COLOR[m.status] || 'var(--color-neutral-600)',
             hasDropped: !!(done && m.dropped), droppedNote: 'حُذفت ' + toAr(m.dropped || 0) + ' من الجمل لأن توثيقها لم يثبت',
-            onlyNote: m.cites && m.cites.length ? 'الإجابة من النصوص المحققة فقط · اضغط رقمًا ليظهر النص مظلَّلًا في كتابه، و↗ لصفحته في تراث' : ''}; });
+            onlyNote: m.cites && m.cites.length ? 'الإجابة من النصوص المحققة فقط · اضغط رقمًا لترى نصه من الكتاب مظلَّلًا، و↗ لصفحته في تراث' : ''}; });
   return v;
 };
 
