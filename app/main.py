@@ -35,6 +35,20 @@ SUGGESTED = [
 
 _lock = threading.Lock()
 _cache = json.loads(CACHE_FILE.read_text(encoding="utf-8")) if CACHE_FILE.exists() else {}
+_cache_mtime = [CACHE_FILE.stat().st_mtime if CACHE_FILE.exists() else 0]
+
+
+def _cached(key):
+    """Answers are shared between server workers through the cache file."""
+    if key not in _cache and CACHE_FILE.exists() and CACHE_FILE.stat().st_mtime != _cache_mtime[0]:
+        with _lock:
+            _cache.update(json.loads(CACHE_FILE.read_text(encoding="utf-8")))
+            _cache_mtime[0] = CACHE_FILE.stat().st_mtime
+    return _cache.get(key)
+
+
+# load the search index at startup, not on the first question
+threading.Thread(target=lambda: pipeline.retriever(), daemon=True).start()
 _hits = defaultdict(deque)  # per-client request times, in memory only (never logged)
 _day = {"date": time.strftime("%Y-%m-%d"), "n": 0}
 
@@ -114,8 +128,8 @@ def _finish(q, para, key, res):
     if not res.get("cached") and not res.get("search_only") and (res.get("sentences") or res.get("scope") in P.REFUSALS):
         with _lock:
             _cache[key] = {k: v for k, v in res.items() if k != "calls"}
-            if len(_cache) % 5 == 0:
-                CACHE_FILE.write_text(json.dumps(_cache, ensure_ascii=False), encoding="utf-8")
+            CACHE_FILE.write_text(json.dumps(_cache, ensure_ascii=False), encoding="utf-8")
+            _cache_mtime[0] = CACHE_FILE.stat().st_mtime
     _log("questions.jsonl", {"question": q, "para": para, "scope": res.get("scope"), "status": res.get("status"),
                              "kept": len(res.get("sentences", [])), "dropped": len(res.get("dropped", [])),
                              "latency_s": res.get("latency_s"), "cost_usd": res.get("cost_usd"),
@@ -128,7 +142,7 @@ def _finish(q, para, key, res):
 async def ask(request: Request):
     q, para = await _question(request)
     key = normalise(q) + "|" + (para or "")
-    if key in _cache:
+    if _cached(key):
         res = {**_cache[key], "cached": True}
     else:
         _limit(request)
@@ -141,7 +155,7 @@ async def ask_stream(request: Request):
     """Server-sent events: stage changes and the passages as soon as they are found, then the checked answer."""
     q, para = await _question(request)
     key = normalise(q) + "|" + (para or "")
-    cached = _cache.get(key)
+    cached = _cached(key)
     if not cached:
         _limit(request)
     events = queue.Queue()

@@ -10,7 +10,7 @@ LOC=${LOC:-uaenorth}
 PLAN=${PLAN:-mudarasa-plan}
 
 if ! az webapp show -n "$APP" -g "$RG" >/dev/null 2>&1; then
-  az group create -n "$RG" -l "$LOC" -o none
+  az group show -n "$RG" >/dev/null 2>&1 || az group create -n "$RG" -l "$LOC" -o none
   az appservice plan create -n "$PLAN" -g "$RG" -l "$LOC" --is-linux --sku B1 -o none
   az webapp create -n "$APP" -g "$RG" -p "$PLAN" --runtime "PYTHON:3.11" -o none
   az webapp config set -n "$APP" -g "$RG" --always-on true --http20-enabled true \
@@ -21,6 +21,12 @@ fi
 # app settings from .env (secrets live only in App Service settings, not in the zip)
 SETTINGS=$(grep -E '^[A-Z_]+=.+' .env | grep -v -E '^(OLLAMA_|GITHUB_MODELS_TOKEN)' | tr '\n' ' ')
 az webapp config appsettings set -n "$APP" -g "$RG" -o none --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true WEBSITES_PORT=8000 $SETTINGS
+
+if [ "${CODE_ONLY:-0}" = "1" ]; then  # quick redeploy: code and web only, keep the data already on the server
+  rm -f deploy.zip && zip -qr deploy.zip app web requirements.txt -x '*/__pycache__/*'
+  az webapp deploy -n "$APP" -g "$RG" --src-path deploy.zip --type zip --clean false -o none || true
+  echo "https://$APP.azurewebsites.net"; exit 0
+fi
 
 # package: code + web + built data + books (server-side only)
 rm -f deploy.zip

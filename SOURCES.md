@@ -28,8 +28,8 @@
 ## Models and cloud services (as deployed, 5 Oct 2026)
 | Service | Deployment | Use | Where the data is processed |
 |---|---|---|---|
-| Azure OpenAI **gpt-5-mini** (2025-08-07; retires 9 Feb 2027) | Global Standard, resource in **UAE North**, version pinned ("once the current version expires") | Answers, scope gate, support judge, study tools | Global Standard: Azure may process a request in any region; stored data stays in the resource's geography. In UAE North, chat models are offered only as Global Standard |
-| Azure OpenAI **text-embedding-3-small** (1024 dimensions) | **Standard (regional)**, UAE North | Dense search | Inside UAE North |
+| Azure OpenAI **gpt-5-mini** (2025-08-07; retires 9 Feb 2027) | Global Standard, Foundry resource in **East US 2**, version pinned ("once the current version expires") | Answers, scope gate, support judge, study tools | Global Standard: Azure may process a request in any region; stored data stays in the resource's geography (US) |
+| Azure OpenAI **text-embedding-3-small** (1024 dimensions) | **Standard (regional)**, East US 2 | Dense search | Inside East US 2 |
 | Azure AI Speech, neural TTS `ar-SA-HamedNeural`; speech to text `ar-SA` | F0 (free), **UAE North** | Recordings for listening, made offline; recitation | Inside UAE North. The browser gets a 10-minute token; the key stays on the server |
 | BGE-M3 via Ollama, local (comparison only) | — | Measured in the retrieval check (local hybrid search: 99% gold page in the top 8, against 95% for the deployed hybrid; eval/RETRIEVAL.md). Not used by the live site | On the machine |
 
