@@ -105,6 +105,30 @@ Critical items failed in at least one run: full: F08; no_verify: F08; no_retriev
 
 The fast setting loses a critical false-premise item, so the middle one is used.
 
+## Answer model compared: gpt-5-mini vs gpt-5.4-mini (100 items; 6 Oct)
+
+gpt-5.4-mini got quota on 6 Oct (Data Zone Standard, US). It was run on the full test set with the same pipeline and
+the same judge (gpt-5-mini). Folders `eval/results/m54_medium` and `eval/results/m54_low` (1 run each; gpt-5-mini: 3 runs).
+
+| Metric | gpt-5-mini, medium (deployed) | gpt-5.4-mini, medium | gpt-5.4-mini, low |
+|---|---|---|---|
+| Citation accuracy (gold page ±1) | **90%** (88–92) | 87% | 78% |
+| Share of cited sentences on a gold page | 77% (75–78) | **91%** | 85% |
+| Correct refusal (out of library) | 98% (94–100) | **100%** | **100%** |
+| False refusal (answerable) | **4%** (4–6) | 11% | 17% |
+| Invented content where refusal expected | 2% (0–7) | **0%** | **0%** |
+| Evidence status matches | 66% (64–67) | **67%** | 64% |
+| Disagreement shown | **58%** (40–73) | 33% | 27% |
+| Critical items passed | **87%** (80–90) | 80% | 80% |
+| Sentences withheld by verification | 9% (7–11) | 15% | 15% |
+| Latency median (s) | 25.7 | 13.0 | **6.8** |
+| Cost per question (USD) | 0.0064 | 0.0072 | **0.0038** |
+
+Before verification, gpt-5.4-mini's answers cite as well (92%) and match the evidence status better (81%), but it writes
+fewer sentences (164 per run against 281) and more of its quotes are not word for word (8.5% of sentences, against 4.6%),
+so the checks empty more answers. **gpt-5-mini stays the answer model**; a tolerant quote match is the next step before
+switching. Cost for the medium run was recomputed from the logged tokens (its price was added after the run started).
+
 ## Retrieval
 
 Retrieval check: 83 items with gold pages (/home/d7/Desktop/MUDARASA/mudarasa/eval/testset.jsonl), top 8

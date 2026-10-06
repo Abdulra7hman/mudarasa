@@ -47,6 +47,19 @@ Qaf: *to be filled in from the sheet.*
 - Speech-to-text for recitation at $1 an hour: if each student recites 30 minutes a month, about **$500**.
 - **Total about $700 a month, roughly $0.70 per student.** Caching repeated questions lowers the model cost.
 
+## Slide: Choosing the model by test (100 questions)
+Source: `eval/REPORT.md` § Answer model compared.
+
+| | gpt-5-mini (deployed) | gpt-5.4-mini |
+|---|---|---|
+| Right page cited | **90%** | 87% |
+| Cited sentences on a right page | 77% | **91%** |
+| False refusals | **4%** | 11% |
+| Critical items | **87%** | 80% |
+| Median time | 26 s | **13 s** |
+
+The newer model is twice as fast, but the word-for-word quote check removes more of its sentences, so gpt-5-mini stays.
+
 ## Slide: The additions (small checks; direction, not proof)
 Source: `eval/ADDITIONS.md`.
 
@@ -65,12 +78,13 @@ Source: `eval/ADDITIONS.md`.
 - Refusal and referral.
 - Listening, memorization, study tools, word meaning, takhrij, review cards, notebook.
 - An evaluation that re-runs with one command.
+- The team's interface connected to the books: pages that turn with the voice, a citation opens its quote highlighted in the book, bookmarks on a word, notes from a selection, dictation and photo questions in the chat.
 - A live site.
 
 **Next:**
 - All of كتاب الطهارة, then the whole Rawd.
 - A specialist review of the links and the test set.
-- A stronger answer model (quota pending) with a separate judge.
+- A tolerant quote match, then gpt-5.4-mini (twice as fast) or gpt-5.4 (no quota yet) as the answer model, with gpt-5-mini as a separate judge.
 - BGE-M3 search (99% vs 95% gold page in the top 8).
 - Hosting in Saudi Arabia East when it opens.
 - A data agreement for more books.

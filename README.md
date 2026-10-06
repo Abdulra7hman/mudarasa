@@ -73,8 +73,11 @@ question ─► scope gate (mini model) ─► retrieval ─► evidence-first a
 ### The interface: what is real, what is illustrative
 The interface is the team's design (`design/madarasa.html`, exported from Claude Design). `python -m scripts.build_ui` writes
 `web/index.html`: the design unchanged, plus integration code that connects it to the backend.
-- **Real, on the books:** the four Zad-family books in the three chapters (reading with a table of contents, listening from any
-  word, word meanings, takhrij from footnote numbers), the cited chat, Zad matn recitation, and chapter summaries.
+- **Real, on the books:** the four Zad-family books in the three chapters: reading in pages of up to 300 words (or one scroll,
+  a setting), listening from any word with pages that turn by themselves, word meanings, takhrij from footnote numbers,
+  bookmarks on a word, and notes from selected text. The cited chat: each citation opens its book with the quote
+  highlighted; dictation; a photo of a page or a written question. Zad matn recitation (50 words a page), chapter summaries,
+  and decks with several cards.
 - **Illustrative data, to show the whole system:** the rest of the library, statistics and insights, the prepared cards and
   notes, and the starting chat history. Parts not built yet open a "coming in a later release" notice.
 - The earlier interface is kept at `/v2`.
@@ -115,7 +118,8 @@ python -m scripts.model_check "azure:gpt-5.4:low" "azure:gpt-5.4-mini:low"   # m
 - The linking is automatic and hasn't been hand-checked yet.
 - The test set is model-drafted.
 - The judges are models: they reduce unsupported sentences but cannot guarantee their absence. The user always gets the page to check.
-- gpt-5-mini both writes the answers and judges them. It's a separate, strict call, but a different judge model would be stronger. gpt-5.4 and gpt-5-nano had no quota on the new subscription.
+- gpt-5-mini both writes the answers and judges them. It's a separate, strict call, but a different judge model would be stronger. gpt-5.4 has no quota on the new subscription; gpt-5.4-mini was tested on the full set: twice as fast, but more of its quotes fail the word-for-word check, so it is not used yet (`eval/REPORT.md`).
+- Photos sent in the chat go to the model to read the question; they are not stored. The Norsal font is served on the site but not included in the repository.
 - The live search uses keywords plus Azure embeddings (95% gold page in the top 8). Local BGE-M3 reaches 99% but needs a larger server.
 - Hadith gradings are shown only as a library book states them.
 - Recitation checking depends on speech recognition of classical Arabic, so treat its mistake flags as hints.
