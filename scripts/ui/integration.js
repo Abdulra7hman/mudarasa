@@ -157,6 +157,7 @@ P.componentDidMount = function(){
   this.EXTRA = [...this.EXTRA, ...Object.values(REAL_SRC)];
   this.REAL = [...this.REAL, ...Object.keys(REAL_SRC)];
   window.__mudarasa = this;
+  document.title = 'مدارسة · رفيق طالب العلم الشرعي';   // the design's loader replaces the page and drops its title
   _mount && _mount.call(this); this.__loadReal();
   if (!window.__mdDigits) { window.__mdDigits = true; startDigits(); }
   if (!window.__mdSel) { window.__mdSel = true;

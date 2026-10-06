@@ -26,6 +26,7 @@ SRC = ROOT / "design" / "madarasa.html"
 JS = ROOT / "scripts" / "ui" / "integration.js"
 OUT = ROOT / "web" / "index.html"
 
+TITLE = "مدارسة · رفيق طالب العلم الشرعي"
 Q1, Q2 = "ما حكم الماء الآجن، وهو المتغير بطول مكثه؟", "اشرح قوله: «وهي ارتفاع الحدث وما في معناه، وزوال الخبث»"
 
 DORAR_MARKUP = """
@@ -255,14 +256,14 @@ def main():
     assert i > 0 and j > i
     tpl = tpl[:j] + "\n" + js + tpl[j:]
     # 10) page title, icon and the Norsal font
-    icon = ("<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' "
-            "fill='%23175c46'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='white' font-family='sans-serif'%3E%D9%85%3C/text%3E%3C/svg%3E\">")
+    icon = '<link rel="icon" type="image/png" href="/img/icon-64.png"><link rel="apple-touch-icon" href="/img/icon-180.png">'
     fonts = FONT_FACES if (ROOT / "web" / "fonts" / "Norsal-Bold.otf").exists() else ""
     assert "<head>" in tpl
-    tpl = tpl.replace("<head>", "<head>" + icon + fonts, 1)
+    tpl = tpl.replace("<head>", "<head>" + icon + fonts, 1).replace("<title>في الهرم</title>", "<title>" + TITLE + "</title>")
     html = html[:m.start(2)] + json.dumps(tpl, ensure_ascii=False).replace("</", "<\\/") + html[m.end(2):]
+    html = html.replace("<title>في الهرم</title>", "<title>" + TITLE + "</title>")
     if "<title>" not in html:
-        html = html.replace("<head>", "<head><title>مدارسة</title>", 1)
+        html = html.replace("<head>", "<head><title>" + TITLE + "</title>", 1)
     html = html.replace("<head>", "<head>" + icon, 1)   # the loader page shows the icon too
     OUT.write_text(html, encoding="utf-8")
     print("written", OUT, len(html), "chars")
