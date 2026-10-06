@@ -58,7 +58,7 @@ P.__loadReal = async function(){
     CHAPTERS.forEach(([c], ci) => {
       const seen = new Set();
       lists[ci].paras.forEach(p => {
-        R.zad.push({id:p.id, text:CLEAN(p.text), ch:c, page:p.page, vol:p.vol, link:p.link});
+        R.zad.push({id:p.id, text:CLEAN(p.text), ch:c, page:p.page, vol:p.vol, link:p.link, anchors:p.anchor_paras || []});
         (p.notes || []).forEach(nt => { if (seen.has(nt.id)) return; seen.add(nt.id);
           const ws = SPLIT(CLEAN(nt.text)); R.iqh.push({id:nt.id, text:'(' + toAr(nt.n) + ') ' + ws.join(' '), ch:c});
           if (clips[nt.id]) est[nt.id] = estimate(clips[nt.id].duration_ms, ws, 1); }); });
@@ -240,6 +240,9 @@ P.renderVals = function(){
     const add0 = v.addBm; v.addBm = () => { add0 && add0(); this.setState(st => ({bms: st.bms.map(b => b.rch ? b : {...b, rch: st.rch || 'water'})})); };
   }
   if (s.recOn && s.recMiss) v.recStatus = s.recMiss;
+  if (v.mean) v.mean = {...v.mean, hasLink:false, link:''};
+  if (v.mean && s.mean && s.mean.takhrij) v.mean = {...v.mean, rows: s.mean.takhrij, status:'من حواشي الكتاب بنصها · البرنامج لا يحكم على الأحاديث', hasLink: !!s.mean.dorar, link: s.mean.dorar || ''};
+  if (real && s.srcId === 'zad' && s.mode === 'meaning') v.readerHint = 'اضغط على أي كلمة لمعرفة معناها، أو على رقم حاشية لترى تخريجها';
   if (v.mean && s.mean && s.mean.grounded && !s.mean.loading) v.mean = {...v.mean, status:'من نصوص الكتب المحمّلة بصياغة الذكاء الاصطناعي · راجعه مع شيخك'};
   if (Array.isArray(v.rcResults)) v.rcResults = v.rcResults.filter(r => !Object.values(REAL_SRC).some(x => x.name === r.name));
   // keep the word being read (or recited) in view
@@ -261,6 +264,8 @@ const _lookup = P.lookup;
 P.lookup = async function(w){
   const V = this.__view(this.state.srcId);
   if (!V) return _lookup.call(this, w);
+  const para = V.paras[paraOf(V, w.i)] || {};
+  if (MARKER.test(w.t) && para.anchors && para.anchors.length) return this.__takhrij(w, para);
   const word = w.t.replace(/[،.:«»؛﴿﴾()]/g, '');
   this.setState({mean:{i:w.i, word, loading:true}});
   const p = V.paras[paraOf(V, w.i)] || {};
@@ -270,6 +275,27 @@ P.lookup = async function(w){
   if (!res) res = this.findGloss(word);
   if (this.state.mean && this.state.mean.i !== w.i) return;
   this.setState({mean:{i:w.i, word, loading:false, res, grounded:true}});
+};
+
+/* ---------- takhrij: a footnote number in the Rawd shows its note, quoted, with any grading and a Dorar link-out ---------- */
+const MARKER = /^\(([٠-٩0-9]+)\)[،.:؛]?$/;
+P.__takhrij = async function(w, p){
+  this.setState({mean:{i:w.i, word:'حاشية ' + w.t.replace(/[،.:؛]$/, ''), loading:true}});
+  let items = [];
+  try { const all = await Promise.all(p.anchors.map(a => api('/api/takhrij/' + a).catch(() => ({items:[]})))); items = all.flatMap(d => d.items || []); } catch(e) {}
+  // the note behind this marker: its lemma ends with the word before the marker; the editors' (Rakaiz) notes first
+  const flat = this.parse(this.state.srcId).paras.flat(), prev = flat[w.i - 1] ? KEY(flat[w.i - 1].t) : '';
+  const hit = it => { const ws = NORM(it.lemma || '').split(' ').filter(Boolean); return prev && ws.length && sim(STEM(ws[ws.length - 1]), prev) >= 0.75; };
+  let pick = items.filter(it => hit(it) && it.source.includes('ركائز'));
+  if (!pick.length) pick = items.filter(hit);
+  if (!pick.length) pick = items.filter(it => it.kind === 'takhrij');
+  const KIND = {takhrij:'التخريج', variant:'فروق النسخ'};
+  const rows = pick.slice(0, 3).map(it => ({k: KIND[it.kind] || 'تعليق', c:'var(--color-text)',
+    v: it.text + (it.grades && it.grades.length ? ' — الحكم كما نقله: ' + it.grades.join('؛ ') : '') + ' (' + it.source + (it.page ? '، ص' + toAr(it.page) : '') + ')'}));
+  const dorar = (pick.find(it => it.kind === 'takhrij' && it.dorar) || {}).dorar || null;
+  if (this.state.mean && this.state.mean.i !== w.i) return;
+  this.setState({mean:{i:w.i, word:'حاشية ' + w.t.replace(/[،.:؛]$/, ''), loading:false, res:['', '', ''],
+    takhrij: rows.length ? rows : [{k:'الحاشية', v:'لم نجد نص هذه الحاشية في المصادر المحمّلة.', c:'var(--color-neutral-600)'}], dorar}});
 };
 
 /* ---------- summaries of the Zad family from the verified study tools ---------- */
@@ -286,6 +312,11 @@ P.summarize = async function(id, title){
 };
 })();
 """
+
+DORAR_MARKUP = """
+                <sc-if value="{{ mean.hasLink }}" hint-placeholder-val="{{ false }}">
+                  <a href="{{ mean.link }}" target="_blank" rel="noopener" style="align-self:flex-start;font-size:14px;color:var(--color-accent-800)">ابحث عن الحديث في الدرر السنية ↗</a>
+                </sc-if>"""
 
 CITES_MARKUP = """
                   <sc-if value="{{ m.hasCites }}" hint-placeholder-val="{{ false }}">
@@ -320,14 +351,26 @@ def main():
         assert a > 0 and 0 < b - a < 200, (cond, a, b)
         extra = PIN + ("max-height:45vh;overflow:auto;" if cond == "isMeaning" else "")
         tpl = tpl[:b] + '<div style="' + extra + style + '"' + tpl[b + len('<div style="' + style + '"'):]
-    # 3) integration code after the design's logic class
+    # 3) the Dorar link-out after the meaning rows
+    a = tpl.find('<sc-for list="{{ mean.rows }}"'); b = tpl.find("</sc-for>", a) + len("</sc-for>")
+    assert a > 0 and b > a
+    tpl = tpl[:b] + DORAR_MARKUP + tpl[b:]
+    # 4) integration code after the design's logic class
     i = tpl.find('<script type="text/x-dc"'); j = tpl.find("</script>", i)
     assert i > 0 and j > i and "</script" not in INTEGRATION
     tpl = tpl[:j] + INTEGRATION + tpl[j:]
-    # 4) the page title
+    # 5) the page title and icon
     html = html[:m.start(2)] + json.dumps(tpl, ensure_ascii=False).replace("</", "<\\/") + html[m.end(2):]
     if "<title>" not in html:
         html = html.replace("<head>", "<head><title>مدارسة</title>", 1)
+    icon = ("<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' "
+            "fill='%23175c46'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='white' font-family='sans-serif'%3E%D9%85%3C/text%3E%3C/svg%3E\">")
+    html = html.replace("<head>", "<head>" + icon, 1)   # the loader page; the design's own page gets it below
+    m = re.search(r'(<script type="__bundler/template">)(.*?)(</script>)', html, re.S)
+    tpl = json.loads(m.group(2))
+    if "<head>" in tpl and 'rel="icon"' not in tpl:
+        tpl = tpl.replace("<head>", "<head>" + icon, 1)
+        html = html[:m.start(2)] + json.dumps(tpl, ensure_ascii=False).replace("</", "<\\/") + html[m.end(2):]
     OUT.write_text(html, encoding="utf-8")
     print("written", OUT, len(html), "chars")
 
